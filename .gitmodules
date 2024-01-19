@@ -1,0 +1,3 @@
+[submodule "codenames"]
+	path = codenames
+	url = git@github.com:gbspend/codenames.git
