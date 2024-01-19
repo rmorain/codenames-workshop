@@ -1,3 +1,6 @@
 [submodule "codenames"]
 	path = codenames
 	url = git@github.com:gbspend/codenames.git
+[submodule "word2vec-GoogleNews-vectors"]
+	path = word2vec-GoogleNews-vectors
+	url = git@github.com:mmihaltz/word2vec-GoogleNews-vectors.git
