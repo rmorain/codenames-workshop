@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <style> body {padding-top: 65px;}</style>
+    <title>Codenames Workshop</title>
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+  </head>
+    <body>
+
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-primary">
+      <a class="navbar-brand" href="index.html">Codenames Workshop</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="https://computationalcreativity.net/iccc24/">ICCC 2024</a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="https://codenames.game/">Play Codenames Online</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main role="main">
+
+      <!-- Main jumbotron for a primary marketing message or call to action -->
+      <div class="jumbotron">
+        <div class="container">
+          <h1 class="display-4">ICCC 2024 Hands-On Codenames Workshop</h1>
+		  <h2>Come play Codenames against a creative AI agent, or write your own!</h2>
+          <p>
+The workshop will span a full day of the conference and consist of two sessions. The first session will introduce participants to Codenames and present them with a software framework for playing the game, including a functioning spymaster agent. During this session, participants will have the opportunity to modify and experiment with the agent to improve it and make it their own. After lunch, the second session will feature an exhibition of the participants' agents either in a live demo playing with humans or an AI-versus-AI tournament, depending on whether there are enough submissions for the latter.
+</p><p>
+The purpose of the first session is to familiarize participants with Codenames, spark ideas for how to design an AI agent to play the game, and provide them the opportunity to build such an agent in a "code jam" or "hackathon" setting. The game will be introduced by explaining how to play and demonstrating a round or two with human players, with special attention given to the challenges and nuances of playing the spymaster role.
+</p><p>
+To facilitate experimentation and help participants create agents within the time limit of the first session, the workshop will provide example spymaster and guesser agents. As part of the introduction to the workshop, we will explain how the agents work, their strengths, and their shortcomings. The aim of the starter agents is to give all participants a jumping-off point for their own tinkering. A participant with an AI background might focus on improving the spymaster's search strategy, while an NLP researcher could improve how the agent evaluates the relationships between words.
+</p><p>
+Participants will be encouraged to form small groups of two to three people to share ideas and contribute their expertise. At least one member of each group will need basic programming skills to successfully modify the agent. We will design the starter agents to be understandable and reasonably simple, drawing on existing popular libraries for potentially difficult NLP functions. The intent is for the starter agents to be approachable to programmers of all skill levels. Beginners could meaningfully influence the information flow between modules, more advanced programmers could modify or rewrite the modules, and experts could even design their own agents from scratch.
+</p><p>
+Ideally, the workshop will attract enough participants to run a small single-elimination tournament between the groups' agents. Codenames generally does not take long to play, and a time limit can be implemented to avoid games running too long. The server running the games will display the current board, clues, and guesses in a simple UI that will be projected for all participants to watch and discuss. We envision a lively reaction to and discussion of the agents playing against one another. Time will be given to each group to informally present the design of their agent and discuss how it performed in the tournament.
+</p><p>
+If not enough participants or groups complete agents in the first session, we will adapt to a more analysis- and discussion-based second session. The client-server model for playing the agents against each other also includes a simple web UI for humans to play as well. The starter agent and/or any agents the participants do produce will be played with and against human volunteers in exhibition-style games followed by an open discussion of the agents' performance, strengths, and weaknesses. This will allow for deeper interrogation of the agents and hopefully spark ideas for future Codenames agent development. In either case, the second session will serve as an opportunity for the participants to come together, compare ideas, discuss, and learn from one another with the intent that they will participate again the next year.
+</p><p>
+While the workshop is designed for participants with no previous experience building Codenames agents, we want to provide opportunities for participants who want to spend more time before the workshop working on their own agents. The full client and agent code that anyone who wishes to work independently will need can be found <a href="https://github.com/rmorain/codenames-workshop/tree/main">here</a>. We do not anticipate that many participants will commit to this level of preparation, but any who do will be excellent additions to the workshop and will likely win the tournament!
+</p>
+        </div>
+      </div>
+
+    </main>
+
+    <footer class="container">
+      <p>Brad Spendlove and Robert Morain &bull; Contact: <a href="mailto:bspendlove@randolphcollege.edu" target="_blank">bspendlove@randolphcollege.edu</a></p>
+    </footer>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
+    <script src="../../assets/js/vendor/popper.min.js"></script>
+    <script src="../../dist/js/bootstrap.min.js"></script>
+  </body>
+</html>
