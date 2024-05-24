@@ -1,7 +1,7 @@
-from flask import Flask, session
+from flask import Flask, session, render_template
 
-from codenames.cnai import Spymaster, W2VAssoc, W2VGuesser
-from codenames.cngame import Codenames
+# from codenames.cnai import Spymaster, W2VAssoc, W2VGuesser
+# from codenames.cngame import Codenames
 
 app = Flask(__name__)
 
@@ -13,18 +13,18 @@ def index():
     return "Welcome to the Codenames workshop!"
 
 
-@app.route("/start")
-def start_game(
-    blue_spymaster=Spymaster(W2VAssoc()),
-    blue_guesser=W2VGuesser(),
-    red_spymaster=Spymaster(W2VAssoc()),
-    red_guesser=W2VGuesser(),
-):
-    if "codenames" not in app.config:
-        app.config["codenames"] = Codenames(
-            blue_spymaster, blue_guesser, red_spymaster, red_guesser
-        )
-    return "Starting game!"
+# @app.route("/start")
+# def start_game(
+#     blue_spymaster=Spymaster(W2VAssoc()),
+#     blue_guesser=W2VGuesser(),
+#     red_spymaster=Spymaster(W2VAssoc()),
+#     red_guesser=W2VGuesser(),
+# ):
+#     if "codenames" not in app.config:
+#         app.config["codenames"] = Codenames(
+#             blue_spymaster, blue_guesser, red_spymaster, red_guesser
+#         )
+#     return "Starting game!"
 
 
 @app.get("/state")
@@ -42,6 +42,9 @@ def post_clue():
 def post_guess():
     return "Posting guess"
 
+@app.route("/game")
+def game():
+    return render_template("game.html")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")
