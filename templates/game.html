@@ -6,6 +6,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}">
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 </head>
+<script>
+    let gameState = {{ game_state|tojson }};
+    const playerRole = "{{ player_role}}";
+    const playerTeam = "{{ player_team}}";
+</script>
 <div>
     <button onclick="window.location.href='{{ url_for('index') }}'">Back to Homepage</button>
 </div>
@@ -13,12 +18,20 @@
     <div id="game-board">
         <!-- Game board will be rendered here -->
     </div>
-    <div id="current-turn"></div>
-    <div id="current-clue"></div>
+    <div id="current-turn" class="info"></div>
+    <div id="current-clue" class="info"></div>
+    <div id="guesses-remaining" class="info"></div>
+    <div id="team-role" class="info"></div>
+    {% if player_role == 'spymaster' %}
+    <div id="clue-form-container">
+        <label for="clue-word">Clue Word:</label>
+        <input type="text" id="clue-word">
+        <label for="clue-number">Number:</label>
+        <input type="number" id="clue-number" min="0">
+        <button id="submit-clue">Submit Clue</button>
+    </div>
+    {% endif %}
 
-    <script>
-        let gameState = {{ game_state|tojson }};
-    </script>
     <script src="{{ url_for('static', filename='js/game.js') }}"></script>
 </body>
 </html>

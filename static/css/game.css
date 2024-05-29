@@ -26,16 +26,9 @@
 .word.a { background-color: pink; }
 /* Add other colors as necessary */
 
-#current-turn {
+.info {
     font-size: 1.2rem;
     font-weight: bold;
     margin-top: 1rem;
-    text-align: center;
-}
-
-#current-clue {
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin-top: 0.5rem;
     text-align: center;
 }
