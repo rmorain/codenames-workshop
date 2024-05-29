@@ -4,12 +4,21 @@
     <meta charset="UTF-8">
     <title>Codenames Game</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}">
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 </head>
+<div>
+    <button onclick="window.location.href='{{ url_for('index') }}'">Back to Homepage</button>
+</div>
 <body>
     <div id="game-board">
         <!-- Game board will be rendered here -->
     </div>
+    <div id="current-turn"></div>
+    <div id="current-clue"></div>
 
+    <script>
+        let gameState = {{ game_state|tojson }};
+    </script>
     <script src="{{ url_for('static', filename='js/game.js') }}"></script>
 </body>
 </html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Codenames Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to the ICCC 2024 Codenames Workshop</h1>
+        <div class="active-games">
+            <h2>Active Games</h2>
+            <!-- Display active games here -->
+        </div>
+        <div class="create-game">
+            <a href="/create" class="button">Create Game</a>
+        </div>
+        <div class="join-game">
+            <a href="#" class="button">Join Game</a>
+        </div>
+        <div class="team-selection">
+            <h2>Select Your Team and Role</h2>
+            <form>
+                <div>
+                    <label for="team">Team:</label>
+                    <select name="team" id="team">
+                        <option value="red">Red</option>
+                        <option value="blue">Blue</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="role">Role:</label>
+                    <select name="role" id="role">
+                        <option value="spymaster">Spymaster</option>
+                        <option value="guesser">Guesser</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
+
