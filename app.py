@@ -154,15 +154,14 @@ def game():
 @app.post("/update_game_state")
 def update_game_state():
     data = request.get_json()
-    pu.db
     if "gameState" in data.keys():
         updated_state = data["gameState"]
         current_guess = data["currentGuess"]
         # Check if game is over
-        if game_over(updated_state, current_guess):
-            # TODO
-            # End game
-            pass
+        winner = game_over(updated_state, current_guess)
+        if winner:
+            socketio.emit("game_end", {"winner": winner})
+            return jsonify({"game_state": updated_state, "winner": winner})
         # Check if we need to change turn
         if change_turn(updated_state, current_guess):
             if updated_state["current_turn"] == "blue":
@@ -171,7 +170,6 @@ def update_game_state():
                 updated_state["current_turn"] = "blue"
     else:
         updated_state = data
-
     app.config["game_state"].update(updated_state)
 
     socketio.emit("update", app.config["game_state"])
@@ -198,9 +196,32 @@ def guessed_wrong(current_guess):
         return False
 
 
-def game_over(updated_state, current_guess):
-    # TODO
-    pass
+def game_over(game_state, current_guess):
+    red_words_guessed = [
+        color
+        for color, guess in zip(game_state["colors"], game_state["guessed"])
+        if guess and color == "R"
+    ]
+    blue_words_guessed = [
+        color
+        for color, guess in zip(game_state["colors"], game_state["guessed"])
+        if guess and color == "U"
+    ]
+    red_words_total = [color for color in game_state["colors"] if color == "R"]
+    blue_words_total = [color for color in game_state["colors"] if color == "U"]
+
+    # Assassin is picked
+    if game_state["colors"][current_guess] == "A":
+        # Opposite team wins
+        return "assassin"
+    # Red team wins
+    elif len(red_words_guessed) == len(red_words_total):
+        return "red"
+    # Blue team wins
+    elif len(blue_words_guessed) == len(blue_words_total):
+        return "blue"
+    else:
+        return None
 
 
 @socketio.on("connect")
