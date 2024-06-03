@@ -4,11 +4,10 @@ import pudb
 
 # from codenames.cnai import Spymaster, W2VAssoc, W2VGuesser
 # from codenames.cngame import Codenames
-
 app = Flask(__name__)
 
 app.secret_key = "859c86bf1895e69b3c6dfc1c6092a3b3c45d9b55f22ac29aa816ed87793c00b8"
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='gevent', cors_allowed_origins="*")
 
 players = {}
 
@@ -232,4 +231,4 @@ def handle_connect():
 
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0")
+    socketio.run(app, host="", port=8000)

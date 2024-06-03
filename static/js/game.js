@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     }
 
-    const socket = io()
+    const socket = io("https://codenames.click")
     socket.on('connect', () => {
             console.log('Connected to the server');
         });
