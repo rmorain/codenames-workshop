@@ -1,6 +1,6 @@
-from flask import Flask, render_template, jsonify, request, redirect, url_for, session
+from flask import Flask, render_template, jsonify, request, redirect, url_for, session, g
 from flask_socketio import SocketIO, emit, join_room, leave_room
-import pudb
+import pudb, sqlite3
 
 # from codenames.cnai import Spymaster, W2VAssoc, W2VGuesser
 # from codenames.cngame import Codenames
@@ -10,6 +10,42 @@ app.secret_key = "859c86bf1895e69b3c6dfc1c6092a3b3c45d9b55f22ac29aa816ed87793c00
 socketio = SocketIO(app, async_mode='gevent', cors_allowed_origins="*")
 
 players = {}
+
+#= database ================
+#copied from gbspend/hieros_human/p2hierosserver.py
+
+DATABASE = 'cn.db'
+
+def get_db():
+	if 'db' not in g:
+		g.db = sqlite3.connect(DATABASE)
+	return g.db
+
+def query_db(query, args=(), one=False):
+	cur = get_db().cursor()
+	cur.execute(query, args)
+	rv = cur.fetchall()
+	return (rv[0] if rv else None) if one else rv
+
+def exec_db(query, args=()):
+	db = get_db()
+	c = db.cursor()
+	c.execute(query, args)
+	id = c.lastrowid
+	db.commit() #if it's slow, maybe move this to teardown_appcontext instead?
+	return id
+
+@app.teardown_appcontext
+def close_connection(e):
+	db = g.pop('db', None)
+	if db is not None:
+		db.close()
+
+#===========================
+
+@app.errorhandler(404)
+def not_found(error):
+	return make_response(jsonify({'error':'Not found'}), 404)
 
 
 @app.route("/")
