@@ -1,4 +1,6 @@
 # codenames-workshop
+## Required file for provided AI client
+https://www.kaggle.com/datasets/leadbest/googlenewsvectorsnegative300
 
 # Deploying changes to production server
 After you have pushed changes to the repository on Github, you can deploy that code to the production server following these instructions.
