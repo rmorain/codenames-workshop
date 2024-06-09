@@ -9,7 +9,7 @@ from sys import argv
 #========================================
 #HELPERS
 
-VERB = "-v" in argv
+VERB = False
 
 def powerset(iterable, rng=range(2,4)): #range(2-5) instead?
 	s = list(iterable)
@@ -271,19 +271,15 @@ class Spymaster:
 				max_combo = combo
 		
 		if VERB: print("mH max_combo:",max_combo) #DEBUG
-		return (combos[max_combo].max_hint, len(max_combo))
-		
+		return (combos[max_combo].max_hint, len(max_combo)), max_combo
 
-class Cheatmaster(Spymaster):
-	def __init__(self):
-		super().__init__(None) #doesn't need Assoc
-	
-	def makeHint(self, board, blue):
-		return ("CHEAT", 9999) #this is so the cheat guesser can (perfectly) guess as many times as it needs
 
 #=TEST======================================
 
 if __name__ == "__main__":
+	
+	VERB = "-v" in argv
+	
 	board = {
 		'U': [
 			'ambulance', 'hospital', 'spell', 'lock', 
