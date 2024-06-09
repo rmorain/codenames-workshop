@@ -5,11 +5,16 @@ from itertools import chain, combinations
 from random import choice
 from re import sub
 from sys import argv
+import nltk
+from nltk.stem.snowball import SnowballStemmer
+
 
 #========================================
 #HELPERS
 
 VERB = False
+
+stemmer = SnowballStemmer(language='english')
 
 def powerset(iterable, rng=range(2,4)): #range(2-5) instead?
 	s = list(iterable)
@@ -18,8 +23,11 @@ def powerset(iterable, rng=range(2,4)): #range(2-5) instead?
 #checks for valid hints:
 #	not on board, one word only, no acronyms, all alphabetical chars
 def isValid(word, board_words):
-	if word in board_words:
-		return False
+	word_stem = stemmer.stem(word)
+	for w in board_words:
+		curr_stem = stemmer.stem(w)
+		if word_stem == curr_stem:
+			return False
 	return '_' not in word and not word.isupper() and word.isalpha()
 
 #list of lists into one list
@@ -105,29 +113,6 @@ class Guesser:
 	#opportunity for subclass to be picky about which words it knows (looking at you w2v)
 	def isKnown(self, w):
 		return True
-
-#make sure to pair with Cheatmaster, otherwise the num in the hint might be less than self.n
-class CheatGuesser(Guesser):
-	def __init__(self, n):
-		super().__init__()
-		self.answers = None
-		self.n = n
-	
-	def isCheat(self):
-		return True
-	
-	#call this before every guess because board changes
-	def cheat(self, board, isBlue):
-		self.answers = board['U'] if isBlue else board['R']
-	
-	def nextGuess(self, choices):
-		if self.answers is None:
-			raise ValueError("CheatGuesser was never given answers via cheat()")
-		if self.num_guesses < self.n:
-			self.num_guesses += 1
-			return self.answers.pop()
-		else:
-			return None
 
 class RandomGuesser(Guesser):
 	def __init__(self):
