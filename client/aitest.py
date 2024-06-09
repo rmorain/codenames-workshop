@@ -38,13 +38,13 @@ words = [
 ]
 #longest word is 11 chars
 
-#provide spaces to capitalize blue words
-def printBoard(selected,spaces=None):
+#provide colors to capitalize blue words
+def printBoard(selected,colors=None):
 	max_width = len(sorted(selected,key=lambda s:len(s), reverse=True)[0])+1
 	line = []
 	for i in range(len(selected)):
 		curr = selected[i]
-		if spaces and spaces[i] == 'U':
+		if colors and colors[i] == 'U':
 			curr = curr.upper()
 		line.append(f"{curr:{max_width}}")
 		if len(line) % row_col == 0:
@@ -55,9 +55,9 @@ def printBoard(selected,spaces=None):
 
 def runTrial():
 	#blue first
-	spaces = ['U']*9 + ['R']*8 + ['N']*7 + ['A']
+	colors = ['U']*9 + ['R']*8 + ['N']*7 + ['A']
 
-	shuffle(spaces)
+	shuffle(colors)
 
 	selected = sample(words, BOARD_SIZE)
 	covered = [False] * BOARD_SIZE
@@ -66,13 +66,13 @@ def runTrial():
 	for i in range(BOARD_SIZE):
 		if covered[i]:
 			continue
-		color = spaces[i]
+		color = colors[i]
 		word = selected[i]
 		board[color].append(word)
 
 	m = Spymaster(W2VAssoc())
 	hint, combo = m.makeHint(board, True)
-	return selected, spaces, board, hint, combo
+	return selected, colors, board, hint, combo
 
 if __name__ == "__main__":
 	s = randint(1,10000) #funny, but you can't GET seed from random
@@ -84,7 +84,7 @@ if __name__ == "__main__":
 	seed(s)
 	print("Seed:",s)
 	
-	selected, spaces, board, hint, combo = runTrial()
+	selected, colors, board, hint, combo = runTrial()
 	print()
 	printBoard(selected)
 
@@ -93,7 +93,7 @@ if __name__ == "__main__":
 
 	input("Press Enter to reveal answer(s)...\n")
 
-	printBoard(selected, spaces)
+	printBoard(selected, colors)
 
 	print(", ".join(combo))
 

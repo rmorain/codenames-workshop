@@ -1,6 +1,6 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session, g
 from flask_socketio import SocketIO, emit, join_room, leave_room
-import pudb, sqlite3
+import sqlite3
 
 # from codenames.cnai import Spymaster, W2VAssoc, W2VGuesser
 # from codenames.cngame import Codenames
@@ -17,35 +17,35 @@ players = {}
 DATABASE = 'cn.db'
 
 def get_db():
-	if 'db' not in g:
-		g.db = sqlite3.connect(DATABASE)
-	return g.db
+    if 'db' not in g:
+        g.db = sqlite3.connect(DATABASE)
+    return g.db
 
 def query_db(query, args=(), one=False):
-	cur = get_db().cursor()
-	cur.execute(query, args)
-	rv = cur.fetchall()
-	return (rv[0] if rv else None) if one else rv
+    cur = get_db().cursor()
+    cur.execute(query, args)
+    rv = cur.fetchall()
+    return (rv[0] if rv else None) if one else rv
 
 def exec_db(query, args=()):
-	db = get_db()
-	c = db.cursor()
-	c.execute(query, args)
-	id = c.lastrowid
-	db.commit() #if it's slow, maybe move this to teardown_appcontext instead?
-	return id
+    db = get_db()
+    c = db.cursor()
+    c.execute(query, args)
+    id = c.lastrowid
+    db.commit() #if it's slow, maybe move this to teardown_appcontext instead?
+    return id
 
 @app.teardown_appcontext
 def close_connection(e):
-	db = g.pop('db', None)
-	if db is not None:
-		db.close()
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
 
 #===========================
 
 @app.errorhandler(404)
 def not_found(error):
-	return make_response(jsonify({'error':'Not found'}), 404)
+    return make_response(jsonify({'error':'Not found'}), 404)
 
 
 @app.route("/")
@@ -66,92 +66,61 @@ def index():
 #         )
 #     return "Starting game!"
 
+BOARD_SIZE = 25
+
+words = [
+    "hollywood", "well", "foot", "new_york", "spring", "court", "tube", "point", "tablet", "slip", "date", "drill", "lemon", "bell", "screen",
+    "fair", "torch", "state", "match", "iron", "block", "france", "australia", "limousine", "stream", "glove", "nurse", "leprechaun", "play",
+    "tooth", "arm", "bermuda", "diamond", "whale", "comic", "mammoth", "green", "pass", "missile", "paste", "drop", "pheonix", "marble", "staff",
+    "figure", "park", "centaur", "shadow", "fish", "cotton", "egypt", "theater", "scale", "fall", "track", "force", "dinosaur", "bill", "mine",
+    "turkey", "march", "contract", "bridge", "robin", "line", "plate", "band", "fire", "bank", "boom", "cat", "shot", "suit", "chocolate",
+    "roulette", "mercury", "moon", "net", "lawyer", "satellite", "angel", "spider", "germany", "fork", "pitch", "king", "crane", "trip", "dog",
+    "conductor", "part", "bugle", "witch", "ketchup", "press", "spine", "worm", "alps", "bond", "pan", "beijing", "racket", "cross", "seal",
+    "aztec", "maple", "parachute", "hotel", "berry", "soldier", "ray", "post", "greece", "square", "mass", "bat", "wave", "car", "smuggler",
+    "england", "crash", "tail", "card", "horn", "capital", "fence", "deck", "buffalo", "microscope", "jet", "duck", "ring", "train", "field",
+    "gold", "tick", "check", "queen", "strike", "kangaroo", "spike", "scientist", "engine", "shakespeare", "wind", "kid", "embassy", "robot",
+    "note", "ground", "draft", "ham", "war", "mouse", "center", "chick", "china", "bolt", "spot", "piano", "pupil", "plot", "lion", "police",
+    "head", "litter", "concert", "mug", "vacuum", "atlantis", "straw", "switch", "skyscraper", "laser", "scuba_diver", "africa", "plastic",
+    "dwarf", "lap", "life", "honey", "horseshoe", "unicorn", "spy", "pants", "wall", "paper", "sound", "ice", "tag", "web", "fan", "orange",
+    "temple", "canada", "scorpion", "undertaker", "mail", "europe", "soul", "apple", "pole", "tap", "mouth", "ambulance", "dress", "ice_cream",
+    "rabbit", "buck", "agent", "sock", "nut", "boot", "ghost", "oil", "superhero", "code", "kiwi", "hospital", "saturn", "film", "button",
+    "snowman", "helicopter", "loch_ness", "log", "princess", "time", "cook", "revolution", "shoe", "mole", "spell", "grass", "washer", "game",
+    "beat", "hole", "horse", "pirate", "link", "dance", "fly", "pit", "server", "school", "lock", "brush", "pool", "star", "jam", "organ",
+    "berlin", "face", "luck", "amazon", "cast", "gas", "club", "sink", "water", "chair", "shark", "jupiter", "copper", "jack", "platypus",
+    "stick", "olive", "grace", "bear", "glass", "row", "pistol", "london", "rock", "van", "vet", "beach", "charge", "port", "disease", "palm",
+    "moscow", "pin", "washington", "pyramid", "opera", "casino", "pilot", "string", "night", "chest", "yard", "teacher", "pumpkin", "thief",
+    "bark", "bug", "mint", "cycle", "telescope", "calf", "air", "box", "mount", "thumb", "antarctica", "trunk", "snow", "penguin", "root", "bar",
+    "file", "hawk", "battery", "compound", "slug", "octopus", "whip", "america", "ivory", "pound", "sub", "cliff", "lab", "eagle", "genius",
+    "ship", "dice", "hood", "heart", "novel", "pipe", "himalayas", "crown", "round", "india", "needle", "shop", "watch", "lead", "tie", "table",
+    "cell", "cover", "czech", "back", "bomb", "ruler", "forest", "bottle", "space", "hook", "doctor", "ball", "bow", "degree", "rome", "plane",
+    "giant", "nail", "dragon", "stadium", "flute", "carrot", "wake", "fighter", "model", "tokyo", "eye", "mexico", "hand", "swing", "key",
+    "alien", "tower", "poison", "cricket", "cold", "knife", "church", "board", "cloak", "ninja", "olympus", "belt", "light", "death", "stock",
+    "millionaire", "day", "knight", "pie", "bed", "circle", "rose", "change", "cap", "triangle"
+]
+
+#(not going to bother with the preset board layout cards)
+def newGame(blueFirst=True):    
+    #I don't know how many red/blue for anything other than 5x5
+    
+    colors = ['U']*8 + ['R']*8 + ['N']*7 + ['A']
+    colors += ['U'] if blueFirst else ['R']
+    shuffle(colors)
+    
+    selected = sample(words, BOARD_SIZE)
+    
+    #assert len(colors) == len(selected) == BOARD_SIZE
+    
+    return colors,selected
 
 # Create new game
 @app.route("/create")
 def create_game():
+    bluesTurn = bool(randint(0,1))
+    colors,words = newGame(bluesTurn)
     app.config["game_state"] = {
-        "colors": [
-            "U",
-            "R",
-            "N",
-            "A",
-            "U",
-            "R",
-            "N",
-            "N",
-            "R",
-            "U",
-            "N",
-            "R",
-            "U",
-            "N",
-            "N",
-            "U",
-            "R",
-            "N",
-            "U",
-            "N",
-            "N",
-            "R",
-            "U",
-            "N",
-            "R",
-        ],
-        "words": [
-            "APPLE",
-            "BOOK",
-            "CAR",
-            "DOG",
-            "EGG",
-            "FISH",
-            "GAME",
-            "HAT",
-            "INK",
-            "JURY",
-            "KEY",
-            "LAMP",
-            "MAP",
-            "NET",
-            "ORANGE",
-            "PEN",
-            "QUEEN",
-            "RAIN",
-            "SUN",
-            "TABLE",
-            "UMBRELLA",
-            "VIOLIN",
-            "WATCH",
-            "XRAY",
-            "YACHT",
-        ],
-        "guessed": [
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-        ],
+        "colors": colors,
+        "words": [w.upper() for w in words],
+        "guessed": [False] * BOARD_SIZE,
         "current_turn": "blue",
         "current_clue": {"word": "Red", "number": 1},
         "guesses_remaining": 1,
