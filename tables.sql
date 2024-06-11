@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS "games" (
 	guessed text NOT NULL, -- string of 25 T/F
 	guesses_left integer NOT NULL DEFAULT 0,
 	blue_turn BOOLEAN NOT NULL DEFAULT 0,
-	curr_clue text -- clue;num
+	curr_clue text -- clue;num (empty string is no clue)
 );
 -- get all history for given game id, they're sorted by asc id, but not necessarily seq
 CREATE TABLE IF NOT EXISTS "history" (

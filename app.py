@@ -123,12 +123,26 @@ def loadState(code):
     state['curr_clue'] = (clue[0],int(clue[1]))
     return state
 
-def updateState(state):
+#common function to convert guessed and clue parts of state for db upsert
+def encodeGuessClue(state):
     guessed = "".join("T" if b else "F" for b in state['guessed'])
     clue = CLUE_SEP.join(str(x) for x in state['curr_clue'])
+    return guessed,clue
+
+#existing game
+def updateState(state):
+    guessed,clue = encodeGuessClue(state)
     args = (guessed,state['guesses_left'],state['blue_turn'],clue,state['code'])
     exec_db("UPDATE games SET guessed=?, guesses_left=?, blue_turn=?, curr_clue=? WHERE code=?", args)
 
+#new game
+def insertState(state):
+    colors = "".join(state['colors'])
+    words = " ".join(state['words'])
+    guessed,clue = encodeGuessClue(state)
+    args = (state['code'],colors,words,guessed,state['guesses_left'],state['blue_turn'],clue)
+    exec_db("INSERT INTO games (code,colors,words,guessed,guesses_left,blue_turn,curr_clue) VALUES(?,?,?,?,?,?,?)", args)
+    
 #(not going to bother with the preset board layout cards)
 def newGame(blueFirst=True):    
     #I don't know how many red/blue for anything other than 5x5
@@ -144,23 +158,18 @@ def newGame(blueFirst=True):
 # Create new game
 @app.route("/create")
 def create_game():
-    
-    #-- DEBUG --------------
-    s1 = loadState("TEST")
-    s1['guessed'] = [True]*25;
-    updateState(s1)
-    
-    #-----------------------
-    
     bluesTurn = bool(randint(0,1))
     colors,words = newGame(bluesTurn)
+    code = ""
     while True:
-        code = genCode()
+        code = "TEST" if code=="" else genCode()
         #make sure it's not already in the DB
         exists = query_db("SELECT id FROM games WHERE code=?", (code,), one=True)
         if not exists:
             break
-            
+        print("code exists:",code)
+    
+    
     app.config["game_state"] = {
         "colors": colors,
         "words": [w.upper() for w in words],
@@ -169,6 +178,17 @@ def create_game():
         "current_clue": {"word": "Red", "number": 1},
         "guesses_remaining": 1,
     }
+    
+    state = {
+        'code': code,
+        'colors': colors,
+        'words': words,
+        'guessed': [False] * BOARD_SIZE,
+        'guesses_left': 0,
+        'blue_turn': bluesTurn,
+        'curr_clue':()
+    }
+    insertState(state)
 
     # Get the role and team parameters from the request
     role = request.args.get("role")
