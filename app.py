@@ -1,13 +1,24 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session, g
 from flask_socketio import SocketIO, emit, join_room, leave_room
+import string
+from random import randint, choice, shuffle, sample
+from itertools import chain, combinations
 import sqlite3
+import logging
+
+'''
+logger = logging.getLogger('werkzeug')
+handler = logging.FileHandler('codenames.log')
+logger.addHandler(handler)
+'''
 
 # from codenames.cnai import Spymaster, W2VAssoc, W2VGuesser
 # from codenames.cngame import Codenames
 app = Flask(__name__)
 
 app.secret_key = "859c86bf1895e69b3c6dfc1c6092a3b3c45d9b55f22ac29aa816ed87793c00b8"
-socketio = SocketIO(app, async_mode='gevent', cors_allowed_origins="*")
+#socketio = SocketIO(app, async_mode='gevent', cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 players = {}
 
@@ -42,11 +53,6 @@ def close_connection(e):
         db.close()
 
 #===========================
-
-@app.errorhandler(404)
-def not_found(error):
-    return make_response(jsonify({'error':'Not found'}), 404)
-
 
 @app.route("/")
 def index():
@@ -98,6 +104,31 @@ words = [
     "millionaire", "day", "knight", "pie", "bed", "circle", "rose", "change", "cap", "triangle"
 ]
 
+def genCode(length=4):
+    letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    return "".join(choice(letters) for i in range(length))
+
+
+CLUE_SEP = ";"
+def loadState(code):
+    values = query_db("SELECT * FROM games WHERE code=?", (code,), one=True)
+    if not values:
+        raise KeyError("Game code not found: "+code)
+    labels = ['id', 'code', 'colors', 'words', 'guessed', 'guesses_left', 'blue_turn', 'curr_clue']
+    state = dict(zip(labels, values))
+    state['colors'] = list(state['colors'])
+    state['words'] = state['words'].split(" ")
+    state['guessed'] = [True if b=='T' else False for b in state['guessed']]
+    clue = state['curr_clue'].split(CLUE_SEP)
+    state['curr_clue'] = (clue[0],int(clue[1]))
+    return state
+
+def updateState(state):
+    guessed = "".join("T" if b else "F" for b in state['guessed'])
+    clue = CLUE_SEP.join(str(x) for x in state['curr_clue'])
+    args = (guessed,state['guesses_left'],state['blue_turn'],clue,state['code'])
+    exec_db("UPDATE games SET guessed=?, guesses_left=?, blue_turn=?, curr_clue=? WHERE code=?", args)
+
 #(not going to bother with the preset board layout cards)
 def newGame(blueFirst=True):    
     #I don't know how many red/blue for anything other than 5x5
@@ -106,17 +137,30 @@ def newGame(blueFirst=True):
     colors += ['U'] if blueFirst else ['R']
     shuffle(colors)
     
-    selected = sample(words, BOARD_SIZE)
-    
-    #assert len(colors) == len(selected) == BOARD_SIZE
+    selected = sample(words, BOARD_SIZE)    
     
     return colors,selected
 
 # Create new game
 @app.route("/create")
 def create_game():
+    
+    #-- DEBUG --------------
+    s1 = loadState("TEST")
+    s1['guessed'] = [True]*25;
+    updateState(s1)
+    
+    #-----------------------
+    
     bluesTurn = bool(randint(0,1))
     colors,words = newGame(bluesTurn)
+    while True:
+        code = genCode()
+        #make sure it's not already in the DB
+        exists = query_db("SELECT id FROM games WHERE code=?", (code,), one=True)
+        if not exists:
+            break
+            
     app.config["game_state"] = {
         "colors": colors,
         "words": [w.upper() for w in words],

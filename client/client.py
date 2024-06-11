@@ -7,8 +7,8 @@ print(r.text[:100],"...")
 
 #makeHint returns hint,extra
 
-DELAY = 2
+DELAY = 2 #is this needed for socketio???
 
 print("Ctrl-C to exit")
 while True:
-	sleep(DELAY)
+    sleep(DELAY)
