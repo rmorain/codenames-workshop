@@ -48,7 +48,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentClueElement = document.getElementById('current-clue');
         const clueWord = gameState.curr_clue.word;
         const clueNumber = gameState.curr_clue.number;
-        currentClueElement.textContent = `Current Clue: ${clueWord} (${clueNumber})`;
+		if (!clueWord && clueNumber < 0){
+			currentClueElement.textContent = "Waiting for clue..."
+		}
+		else{
+			currentClueElement.textContent = `Current Clue: ${clueWord} (${clueNumber})`;
+		}
 
         // Calculate the team scores and render the UI element
         red_score = 0;
