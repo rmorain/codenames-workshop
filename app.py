@@ -59,28 +59,10 @@ def close_connection(e):
 def index():
     return render_template("index.html")
 
-
-# @app.route("/start")
-# def start_game(
-#     blue_spymaster=Spymaster(W2VAssoc()),
-#     blue_guesser=W2VGuesser(),
-#     red_spymaster=Spymaster(W2VAssoc()),
-#     red_guesser=W2VGuesser(),
-# ):
-#     if "codenames" not in app.config:
-#         app.config["codenames"] = Codenames(
-#             blue_spymaster, blue_guesser, red_spymaster, red_guesser
-#         )
-#     return "Starting game!"
-
 #global consts
 BOARD_SIZE = 25
 CLUE_SEP = ";"
 GAME_OVER_STATE  = "GAME OVER"
-RED_GUESS_STATE  = "RED GUESS"
-BLUE_GUESS_STATE = "BLUE GUESS"
-RED_CLUE_STATE   = "RED CLUE"
-BLUE_CLUE_STATE  = "BLUE CLUE"
 
 words = [
     "hollywood", "well", "foot", "new_york", "spring", "court", "tube", "point", "tablet", "slip", "date", "drill", "lemon", "bell", "screen",
@@ -119,14 +101,11 @@ def genCode(length=4):
 def emptyClue():
     return {"word": "", "number": -1}
 
-def isEmpty(clue):
-    return number < 0 and not word
-
 def loadState(code):
     values = query_db("SELECT * FROM games WHERE code=?", (code,), one=True)
     if not values:
         return None
-    labels = ['id', 'code', 'colors', 'words', 'guessed', 'guesses_left', 'curr_turn', 'curr_clue']
+    labels = ['id', 'code', 'colors', 'words', 'guessed', 'guesses_left', 'curr_turn', 'curr_clue', 'game_state']
     state = dict(zip(labels, values))
     
     #decode from DB format where necessary
@@ -134,7 +113,7 @@ def loadState(code):
     state['words'] = state['words'].split(" ")
     state['guessed'] = [True if b=='T' else False for b in state['guessed']]
     clue_word, clue_num = state['curr_clue'].split(CLUE_SEP)
-    state['curr_clue'] = {"word": clue_word, "number": clue_num}
+    state['curr_clue'] = {"word": clue_word, "number": int(clue_num)}
     
     return state
 
@@ -148,16 +127,16 @@ def encodeGuessClue(state):
 #existing game
 def updateState(state):
     guessed,clue = encodeGuessClue(state)
-    args = (guessed,state['guesses_left'],state['curr_turn'],clue,state['code'])
-    exec_db("UPDATE games SET guessed=?, guesses_left=?, curr_turn=?, curr_clue=? WHERE code=?", args)
+    args = (guessed,state['guesses_left'],state['curr_turn'],clue,state['game_state'],state['code'])
+    exec_db("UPDATE games SET guessed=?, guesses_left=?, curr_turn=?, curr_clue=?, game_state=? WHERE code=?", args)
 
 #new game
 def insertState(state):
     colors = "".join(state['colors'])
     words = " ".join(state['words'])
     guessed,clue = encodeGuessClue(state)
-    args = (state['code'],colors,words,guessed,state['guesses_left'],state['curr_turn'],clue)
-    id = exec_db("INSERT INTO games (code,colors,words,guessed,guesses_left,curr_turn,curr_clue) VALUES(?,?,?,?,?,?,?)", args)
+    args = (state['code'],colors,words,guessed,state['guesses_left'],state['curr_turn'],clue,state['game_state'])
+    id = exec_db("INSERT INTO games (code,colors,words,guessed,guesses_left,curr_turn,curr_clue,game_state) VALUES(?,?,?,?,?,?,?,?)", args)
     return id
     
 #(not going to bother with the preset board layout cards)
@@ -197,6 +176,7 @@ def create_game():
         'guesses_left': 0,
         'curr_turn': 'blue' if blueStarts else 'red',
         'curr_clue': emptyClue(),
+        'game_state': "" #only GAME OVER or INVALID
     }
     state['id'] = insertState(state)
     writeHist(state,"new game","game started")
@@ -253,41 +233,46 @@ def isValid(word, board_words):
             return False
     return True
 
+def isEmpty(clue):
+    return clue['word'] == "" and clue["number"] < 0
+
 #POST json should be {team:__, word:__, number:__}
 @app.post("/make_clue")
 def make_clue():
     data = request.get_json()
-    try:
-        code = data['code']
-        state = loadState(code)
-        if not state:
-            return "Game not found", 404
+    #try:
+    code = data['code']
+    state = loadState(code)
+    if not state:
+        return "Game not found", 404
+    
+    game_state = state['game_state']
+    team = data['team']
+    
+    if team != state['curr_turn'] or not isEmpty(state['curr_clue']):
+        return "Clue not needed", 400
+    
+    word = data['word'].lower().strip()
+    number = int(data['number'])
+    
+    #validate word
+    bad_word = any(p in word for p in punctuation + " \t\r\n")
+    if bad_word or not isValid(word,state['words']):
+        return "Invalid clue word", 400
+    
+    #filling in clue changes game state
+    state['curr_clue']['word'] = word;
+    state['curr_clue']['number'] = number;
+    state['guesses_left'] = number + 1;
+    
+    updateState(state)
+    writeHist(state,"new clue"," ".join([team, word, str(number)]))
+    
+    socketio.emit("update", state)
+    return jsonify(state)
         
-        game_state = state['game_state']
-        team = data['team']
-        
-        if team != state['curr_turn'] or not isEmpty(state['clue']):
-            return "Clue not needed", 400
-        
-        word = data['word'].lower().strip()
-        number = int(data['number'])
-        
-        #validate word
-        bad_word = any(p in word for p in punctuation + " \t\r\n")
-        if bad_word or not isValid(word,state['words']):
-            return "Invalid clue word", 400
-        
-        #filling in clue changes game state
-        state['curr_clue']['word'] = word;
-        state['curr_clue']['number'] = number;
-        state['guesses_left'] = number + 1;
-        
-        updateState(state)
-        socketio.emit("update", state)
-        return jsonify(state)
-        
-    except:
-        return "Error recording clue", 400
+    #except:
+    #    return "Error recording clue", 400
 
 #=============================================
 

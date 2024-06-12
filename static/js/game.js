@@ -140,7 +140,9 @@ document.addEventListener('DOMContentLoaded', function() {
             alert("You are not the spymaster!");
             return;
         }
-		if (!(gameState.game_state=="RED CLUE" && playerTeam=="red") && !(gameState.game_state=="BLUE CLUE" && playerTeam=="blue")){
+		//if (!(gameState.game_state=="RED CLUE" && playerTeam=="red") && !(gameState.game_state=="BLUE CLUE" && playerTeam=="blue")){
+		const clue = gameState.curr_clue;
+		if (!(clue.word == "" && clue.number < 0)){
 			alert("Clue isn't needed now!");
 			return;
 		}
@@ -160,6 +162,8 @@ document.addEventListener('DOMContentLoaded', function() {
 				word: newClueWord,
 				number: newClueNumber
 			};
+			console.log(args);
+			console.log(JSON.stringify(args));
             // Clear the input fields
             clueWordInput.value = '';
             clueNumberInput.value = '';
