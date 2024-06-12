@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
             for (let col = 0; col < 5; col++) {
                 const index = row * 5 + col;
                 const color = gameState.colors[index];
-                const word = gameState.words[index].toUpperCase();
+                const word = gameState.words[index].toUpperCase().replace("_"," ");
                 const isGuessed = gameState.guessed[index];
 
                 let cardClass = 'word';
@@ -129,6 +129,10 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 		gameEndElement.style.display = 'block';
     }
+	
+	function handlePass(){
+		alert("TODO: pass");
+	}
 
     // Function to handle clue submission
     function handleClueSubmission() {
@@ -210,6 +214,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (playerRole == "spymaster"){
         const submitClueButton = document.getElementById('submit-clue');
         submitClueButton.addEventListener('click', handleClueSubmission);
+    }
+	if (playerRole == "guesser"){
+        const passButton = document.getElementById('submit-pass');
+        passButton.addEventListener('click', handlePass);
     }
     renderGameBoard();
 });

@@ -21,6 +21,7 @@ body {
 }
 
 #game-board {
+	width: 100%;
     display: grid;
     grid-template-columns: repeat(5, 1fr); /* Adjust the number of columns as needed */
     gap: 10px;
