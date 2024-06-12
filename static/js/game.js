@@ -72,59 +72,57 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function handleCardClick(event) {
-            const cardElement = event.target;
-            const index = parseInt(cardElement.getAttribute('data-index'), 10);
+		if (playerRole != "guesser"){
+			return; //click just does nothing
+		}
+		const cardElement = event.target;
+		const index = parseInt(cardElement.getAttribute('data-index'), 10);
 
 
-            if (!gameState.guessed[index]) {
-                const currentGuess = index;
-                if (gameState.curr_turn != playerTeam){
-                    alert("Not your turn!");
-                    return;
-                }
+		if (!gameState.guessed[index]) {
+			const currentGuess = index;
+			if (gameState.curr_turn != playerTeam){
+				alert("Not your turn!");
+				return;
+			}
 
-                if (playerRole != "guesser"){
-                    alert("You are not the guesser!");
-                    return;
-                }
+			if (gameState.guesses_left === 0) {
+				alert("No more guesses allowed this turn.");
+				return;
+			}
+			gameState.guessed[index] = true;
+			gameState.guesses_left--; 
 
-                if (gameState.guesses_left === 0) {
-                    alert("No more guesses allowed this turn.");
-                    return;
-                }
-                gameState.guessed[index] = true;
-                gameState.guesses_left--; 
-
-                fetch('/update_game_state', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({gameState, currentGuess})
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.hasOwnProperty("winner")) {
-                        gameState = data.game_state;
-                        winner = data.winner;
-                        renderGameBoard();
-                        displayGameEnd(winner);
-                    }
-                    gameState = data;
-                    renderGameBoard();
-                })
-                .catch(error => console.error('Error:', error));
-            }
+			fetch('/update_game_state', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({gameState, currentGuess})
+			})
+			.then(response => response.json())
+			.then(data => {
+				if (data.hasOwnProperty("winner")) {
+					gameState = data.game_state;
+					winner = data.winner;
+					renderGameBoard();
+					displayGameEnd(winner);
+				}
+				gameState = data;
+				renderGameBoard();
+			})
+			.catch(error => console.error('Error:', error));
+		}
     }
 
     function displayGameEnd(winner) {
-                const gameEndElement = document.getElementById('game-end');
-                if (winner === 'assassin') {
-                    gameEndElement.textContent = "Game Over! Assassin guessed.";
-                } else {
-                    gameEndElement.textContent = `Game Over! ${winner.charAt(0).toUpperCase() + winner.slice(1)} team wins!`;
-                }
-                gameEndElement.style.display = 'block';
+		const gameEndElement = document.getElementById('game-end');
+		if (winner === 'assassin') {
+			gameEndElement.textContent = "Game Over! Assassin guessed.";
+		} else {
+			gameEndElement.textContent = `Game Over! ${winner.charAt(0).toUpperCase() + winner.slice(1)} team wins!`;
+		}
+		gameEndElement.style.display = 'block';
     }
 
     // Function to handle clue submission
