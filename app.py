@@ -266,7 +266,7 @@ def make_clue():
     state['guesses_left'] = number + 1;
     
     updateState(state)
-    writeHist(state,"new clue"," ".join([team, word, str(number)]))
+    writeHist(state,"new clue", team + ": ("+word + " " + str(number) + ")")
     
     socketio.emit("update", state)
     return jsonify(state)
@@ -276,9 +276,14 @@ def make_clue():
 
 #=============================================
 
-@app.post("/update_game_state")
-def update_game_state(): #TODO
+@app.post("/make_guess")
+def make_guess(): #TODO
     data = request.get_json()
+    print(data)
+    return "WORKING", 501
+    
+    #######
+    
     if "gameState" in data.keys():
         updated_state = data["gameState"]
         current_guess = data["currentGuess"]

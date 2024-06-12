@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				alert("Not your turn!");
 				return;
 			}
-
+	
 			if (gameState.guesses_left === 0) {
 				alert("No more guesses allowed this turn.");
 				return;
@@ -98,12 +98,16 @@ document.addEventListener('DOMContentLoaded', function() {
 			gameState.guessed[index] = true;
 			gameState.guesses_left--; 
 
-			fetch('/update_game_state', {
+			const args = {
+				team: playerTeam,
+				guess: currentGuess
+			};
+			fetch('/make_guess', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({gameState, currentGuess})
+				body: JSON.stringify(args)
 			})
 			.then(response => response.json())
 			.then(data => {
@@ -116,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				gameState = data;
 				renderGameBoard();
 			})
-			.catch(error => console.error('Error:', error));
+			.catch(error => alert(error));
 		}
     }
 
@@ -183,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 gameState = data;
                 renderGameBoard();
             })
-            .catch(error => console.error('Error:', error)); //do i need to manually refresh state/board?
+            .catch(error => alert(error)); //do i need to manually refresh state/board?
         }
 
     }
