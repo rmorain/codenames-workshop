@@ -20,8 +20,6 @@ app.secret_key = "859c86bf1895e69b3c6dfc1c6092a3b3c45d9b55f22ac29aa816ed87793c00
 #socketio = SocketIO(app, async_mode='gevent', cors_allowed_origins="*")
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-players = {}
-
 #= database ================
 #copied from gbspend/hieros_human/p2hierosserver.py
 
@@ -72,7 +70,10 @@ def index():
 #         )
 #     return "Starting game!"
 
+#global consts
 BOARD_SIZE = 25
+CLUE_SEP = ";"
+GAME_OVER_STATE = "GAME_OVER"
 
 words = [
     "hollywood", "well", "foot", "new_york", "spring", "court", "tube", "point", "tablet", "slip", "date", "drill", "lemon", "bell", "screen",
@@ -108,40 +109,44 @@ def genCode(length=4):
     letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     return "".join(choice(letters) for i in range(length))
 
-
-CLUE_SEP = ";"
 def loadState(code):
     values = query_db("SELECT * FROM games WHERE code=?", (code,), one=True)
     if not values:
         raise KeyError("Game code not found: "+code)
-    labels = ['id', 'code', 'colors', 'words', 'guessed', 'guesses_left', 'blue_turn', 'curr_clue']
+    labels = ['id', 'code', 'colors', 'words', 'guessed', 'guesses_left', 'curr_turn', 'curr_clue']
     state = dict(zip(labels, values))
+    
+    #decode from DB format where necessary
     state['colors'] = list(state['colors'])
     state['words'] = state['words'].split(" ")
     state['guessed'] = [True if b=='T' else False for b in state['guessed']]
-    clue = state['curr_clue'].split(CLUE_SEP)
-    state['curr_clue'] = (clue[0],int(clue[1]))
+    clue_word, clue_num = state['curr_clue'].split(CLUE_SEP)
+    state['curr_clue'] = {"word": clue_word, "number": clue_num}
+    
     return state
 
 #common function to convert guessed and clue parts of state for db upsert
 def encodeGuessClue(state):
     guessed = "".join("T" if b else "F" for b in state['guessed'])
-    clue = CLUE_SEP.join(str(x) for x in state['curr_clue'])
+    curr_clue = state['curr_clue']
+    clue = curr_clue['word'] + CLUE_SEP + str(curr_clue['number'])
     return guessed,clue
 
 #existing game
 def updateState(state):
     guessed,clue = encodeGuessClue(state)
-    args = (guessed,state['guesses_left'],state['blue_turn'],clue,state['code'])
-    exec_db("UPDATE games SET guessed=?, guesses_left=?, blue_turn=?, curr_clue=? WHERE code=?", args)
+    args = (guessed,state['guesses_left'],state['curr_turn'],clue,state['code'])
+    exec_db("UPDATE games SET guessed=?, guesses_left=?, curr_turn=?, curr_clue=? WHERE code=?", args)
 
 #new game
 def insertState(state):
     colors = "".join(state['colors'])
     words = " ".join(state['words'])
     guessed,clue = encodeGuessClue(state)
-    args = (state['code'],colors,words,guessed,state['guesses_left'],state['blue_turn'],clue)
-    exec_db("INSERT INTO games (code,colors,words,guessed,guesses_left,blue_turn,curr_clue) VALUES(?,?,?,?,?,?,?)", args)
+    args = (state['code'],colors,words,guessed,state['guesses_left'],state['curr_turn'],clue)
+    id = exec_db("INSERT INTO games (code,colors,words,guessed,guesses_left,curr_turn,curr_clue) VALUES(?,?,?,?,?,?,?)", args)
+    print("INSERTed, id:",id)
+    return id
     
 #(not going to bother with the preset board layout cards)
 def newGame(blueFirst=True):    
@@ -155,21 +160,24 @@ def newGame(blueFirst=True):
     
     return colors,selected
 
-# Create new game
-@app.route("/create")
+#writes key/value to history table
+def writeHist(state,head,entry):
+    exec_db("INSERT INTO history (game,head,entry) VALUES(?,?,?)", (state['id'],head,entry))
+    
+
+# Create new game and insert into DB
+#@app.route("/create")
 def create_game():
-    bluesTurn = bool(randint(0,1))
-    colors,words = newGame(bluesTurn)
-    code = ""
+    blueStarts = bool(randint(0,1))
+    colors,words = newGame(blueStarts)
     while True:
-        code = "TEST" if code=="" else genCode()
+        code = genCode()
         #make sure it's not already in the DB
         exists = query_db("SELECT id FROM games WHERE code=?", (code,), one=True)
         if not exists:
             break
-        print("code exists:",code)
     
-    
+    '''
     app.config["game_state"] = {
         "colors": colors,
         "words": [w.upper() for w in words],
@@ -178,6 +186,7 @@ def create_game():
         "current_clue": {"word": "Red", "number": 1},
         "guesses_remaining": 1,
     }
+    '''
     
     state = {
         'code': code,
@@ -185,39 +194,39 @@ def create_game():
         'words': words,
         'guessed': [False] * BOARD_SIZE,
         'guesses_left': 0,
-        'blue_turn': bluesTurn,
-        'curr_clue':()
+        'curr_turn': 'blue' if blueStarts else 'red',
+        'curr_clue': {"word": "", "number": -1}
     }
-    insertState(state)
+    state['id'] = insertState(state)
+    writeHist(state,"new game","game started")
 
-    # Get the role and team parameters from the request
-    role = request.args.get("role")
-    team = request.args.get("team")
-
-    # Construct the URL with the query parameters
-    game_url = url_for("game", role=role, team=team)
-    return redirect(game_url)
+    return state
 
 
 @app.route("/game")
 def game():
-    if "game_state" not in app.config:
-        create_game()
+    if 'code' in request.args:
+        code = request.args.get("code")
+        state = loadState(code)
+    else:
+        state = create_game()
+    
     # Assign a role and team to the player
     role = request.args.get("role")
     team = request.args.get("team")
-    player_id = session.get(
-        "player_id", request.remote_addr
-    )  # Use session or IP for simplicity
-    players[player_id] = {"team": team, "role": role}
+    
     print(role, team)
     return render_template(
         "game.html",
-        game_state=app.config["game_state"],
+        game_state=state,
         player_role=role,
         player_team=team,
     )
 
+@app.route("/getgames")
+def get_games():
+    codes = query_db("SELECT code FROM games WHERE game_state !=? OR game_state IS NULL",(GAME_OVER_STATE,))
+    return jsonify([c[0] for c in codes]) #one-item tuple to just item
 
 @app.post("/update_game_state")
 def update_game_state():
@@ -294,9 +303,7 @@ def game_over(game_state, current_guess):
 
 @socketio.on("connect")
 def handle_connect():
-    player_id = session.get("player_id", request.remote_addr)
-    if player_id in players:
-        emit("player_info", players[player_id])
+    pass
 
 
 if __name__ == "__main__":

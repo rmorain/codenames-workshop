@@ -37,6 +37,22 @@ p {
 .button:hover {
     background-color: #0056b3;
 }
+
+.button-red {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #cc0000;
+    color: #fff;
+	font-weight: bold;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    margin: 10px;
+}
+.button-red:hover {
+    background-color: #b30000;
+}
+
 .team-selection {
     margin-top: 30px;
 }

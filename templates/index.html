@@ -5,13 +5,9 @@
     <title>Codenames Game</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
-<body>
+<body onload="popGames()">
     <div class="container">
         <h1>Welcome to the ICCC 2024 Codenames Workshop</h1>
-        <div class="active-games">
-            <h2>Active Games</h2>
-            <!-- Display active games here -->
-        </div>
         <div class="team-selection">
             <h2>Select Your Team and Role</h2>
             <form id="team-role-form">
@@ -29,11 +25,16 @@
                         <option value="guesser">Guesser</option>
                     </select>
                 </div>
-                <div class="buttons">
-                    <button type="button" id="create-game-button" class="button">Create Game</button>
-                    <button type="button" id="join-game-button" class="button">Join Game</button>
-                </div>
             </form>
+        </div>
+		<div class="container">
+			<h2>Active Games</h2>
+            <!-- Display active games here -->
+			<div id="active-games"></div>
+			<div class="buttons">
+				<button type="button" id="create-game-button" class="button">Create Game</button>
+				<button type="button" id="refresh-button" class="button">Refresh List</button>
+			</div>
         </div>
     </div>
 
@@ -43,12 +44,55 @@
             const role = document.getElementById('role').value;
             window.location.href = `/create?team=${team}&role=${role}`;
         });
-
+		
+		document.getElementById('refresh-button').addEventListener('click', popGames);
+		
+/*
         document.getElementById('join-game-button').addEventListener('click', function() {
             const team = document.getElementById('team').value;
             const role = document.getElementById('role').value;
             window.location.href = `/game?team=${team}&role=${role}`;
         });
+*/
+		
+		//--------------------------------------------------
+		
+		function popGames() {
+			fetch('/getgames')
+			  .then(response => {
+				if (response.ok) {
+				  return response.json(); // Parse the response data as JSON
+				} else {
+				  throw new Error('API request failed');
+				}
+			  })
+			  .then(data => {
+				// Process the response data here
+				console.log(data); // Example: Logging the data to the console
+				const games = document.getElementById('active-games');
+				games.innerHTML = "";
+				for (let i = 0; i < data.length; i++) {
+					let code = data[i];
+					const newButton = document.createElement('button');
+					newButton.classList.add('button-red');
+					newButton.textContent = code;
+					newButton.addEventListener('click', loadGame);
+					games.appendChild(newButton);
+				}
+			  })
+			  .catch(error => {
+				// Handle any errors here
+				console.error(error); // Example: Logging the error to the console
+			  });
+		}
+		
+		function loadGame(evt){
+			const code = evt.currentTarget.textContent;
+			const team = document.getElementById('team').value;
+            const role = document.getElementById('role').value;
+            window.location.href = `/game?code=${code}&team=${team}&role=${role}`;
+		}
+		
     </script>
 </body>
 </html>

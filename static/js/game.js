@@ -38,16 +38,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Update the current turn UI element
         const currentTurnElement = document.getElementById('current-turn');
-        currentTurnElement.textContent = `Current Turn: ${gameState.current_turn}`;
+        currentTurnElement.textContent = `Current Turn: ${gameState.curr_turn}`;
 
         // Update the remaining guesses UI element
         const guessesRemainingElement = document.getElementById('guesses-remaining');
-        guessesRemainingElement.textContent = `Guesses remaining: ${gameState.guesses_remaining}`;
+        guessesRemainingElement.textContent = `Guesses remaining: ${gameState.guesses_left}`;
 
         // Update the current clue UI element
         const currentClueElement = document.getElementById('current-clue');
-        const clueWord = gameState.current_clue.word;
-        const clueNumber = gameState.current_clue.number;
+        const clueWord = gameState.curr_clue.word;
+        const clueNumber = gameState.curr_clue.number;
         currentClueElement.textContent = `Current Clue: ${clueWord} (${clueNumber})`;
 
         // Calculate the team scores and render the UI element
@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!gameState.guessed[index]) {
                 const currentGuess = index;
-                if (gameState.current_turn != playerTeam){
+                if (gameState.curr_turn != playerTeam){
                     alert("Not your turn!");
                     return;
                 }
@@ -88,12 +88,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
 
-                if (gameState.guesses_remaining === 0) {
+                if (gameState.guesses_left === 0) {
                     alert("No more guesses allowed this turn.");
                     return;
                 }
                 gameState.guessed[index] = true;
-                gameState.guesses_remaining--; 
+                gameState.guesses_left--; 
 
                 fetch('/update_game_state', {
                     method: 'POST',
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to handle clue submission
     function handleClueSubmission() {
-        if (gameState.current_turn != playerTeam){
+        if (gameState.curr_turn != playerTeam){
             alert("Not your turn!");
             return;
         }
@@ -145,9 +145,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const newClueNumber = parseInt(clueNumberInput.value, 10);
 
         if (newClueWord && !isNaN(newClueNumber)) {
-            gameState.current_clue.word = newClueWord;
-            gameState.current_clue.number = newClueNumber;
-            gameState.guesses_remaining = newClueNumber;
+            gameState.curr_clue.word = newClueWord;
+            gameState.curr_clue.number = newClueNumber;
+            gameState.guesses_left = newClueNumber;
 
             // Clear the input fields
             clueWordInput.value = '';
