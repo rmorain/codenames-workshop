@@ -11,11 +11,12 @@
     const playerRole = "{{ player_role}}";
     const playerTeam = "{{ player_team}}";
 </script>
-<body>
+<body onload="setCode()">
     <div class="header">
             <button class="btn" onclick="window.location.href='{{ url_for('index') }}'">Back to Homepage</button>
     </div>
     <div id="game-container">
+		<h2 id='code-badge'>GAME CODE</h2>
         <div id="game-board"></div>
         <div id="info-container">
             <div id="current-turn" class="info"></div>
@@ -36,5 +37,10 @@
         {% endif %}
     </div>
     <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+	<script>
+		function setCode(){
+			document.getElementById('code-badge').textContent = "Game Code: " + gameState.code;
+		}
+	</script>
 </body>
 </html>

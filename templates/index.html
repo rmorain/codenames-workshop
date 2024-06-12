@@ -42,7 +42,7 @@
         document.getElementById('create-game-button').addEventListener('click', function() {
             const team = document.getElementById('team').value;
             const role = document.getElementById('role').value;
-            window.location.href = `/create?team=${team}&role=${role}`;
+            window.location.href = `/game?team=${team}&role=${role}`;
         });
 		
 		document.getElementById('refresh-button').addEventListener('click', popGames);

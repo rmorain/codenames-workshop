@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
             for (let col = 0; col < 5; col++) {
                 const index = row * 5 + col;
                 const color = gameState.colors[index];
-                const word = gameState.words[index];
+                const word = gameState.words[index].toUpperCase();
                 const isGuessed = gameState.guessed[index];
 
                 let cardClass = 'word';
@@ -133,11 +133,15 @@ document.addEventListener('DOMContentLoaded', function() {
             alert("Not your turn!");
             return;
         }
-
         if (playerRole != "spymaster"){
             alert("You are not the spymaster!");
             return;
         }
+		if (!(gameState.game_state=="RED CLUE" && playerTeam=="red") && !(gameState.game_state=="BLUE CLUE" && playerTeam=="blue")){
+			alert("Clue isn't needed now!");
+			return;
+		}
+		
         const clueWordInput = document.getElementById('clue-word');
         const clueNumberInput = document.getElementById('clue-number');
 
@@ -145,26 +149,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const newClueNumber = parseInt(clueNumberInput.value, 10);
 
         if (newClueWord && !isNaN(newClueNumber)) {
-            gameState.curr_clue.word = newClueWord;
-            gameState.curr_clue.number = newClueNumber;
-            gameState.guesses_left = newClueNumber;
-
+			//client isn't responsible for updating game state
+			//just submit clue and get new state from server
+			const args = {
+				code: gameState.code,
+				team: playerTeam,
+				word: newClueWord,
+				number: newClueNumber
+			};
             // Clear the input fields
             clueWordInput.value = '';
             clueNumberInput.value = '';
-            fetch('/update_game_state', {
+            fetch('/make_clue', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(gameState)
+                body: JSON.stringify(args)
             })
             .then(response => response.json())
             .then(data => {
                 gameState = data;
                 renderGameBoard();
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => console.error('Error:', error)); //do i need to manually refresh state/board?
         }
 
     }
