@@ -102,24 +102,36 @@ document.addEventListener('DOMContentLoaded', function() {
 				guess: currentGuess
 			};
 			fetch('/make_guess', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(args)
-			})
-			.then(response => response.json())
-			.then(data => {
-				if (data.hasOwnProperty("winner")) {
-					gameState = data.game_state;
-					winner = data.winner;
-					renderGameBoard();
-					displayGameEnd(winner);
-				}
-				gameState = data;
-				renderGameBoard();
-			})
-			.catch(error => alert(error));
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(args)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(error => {
+                        throw new Error(error.error);
+                    });
+                }
+            })
+            .then(data => {
+                if (data.hasOwnProperty("winner")) {
+                    gameState = data.game_state;
+                    winner = data.winner;
+                    renderGameBoard();
+                    displayGameEnd(winner);
+                } else {
+                    gameState = data;
+                    renderGameBoard();
+                }
+            })
+            .catch(error => {
+                alert("Error: " + error.message);
+                // Optionally, you can refresh the game state/board here if needed
+            });
 		}
     }
 

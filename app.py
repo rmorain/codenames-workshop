@@ -29,8 +29,8 @@ else:
 CORS(app)
 
 app.secret_key = "859c86bf1895e69b3c6dfc1c6092a3b3c45d9b55f22ac29aa816ed87793c00b8"
-# socketio = SocketIO(app, async_mode='gevent', cors_allowed_origins="*")
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, async_mode='gevent', cors_allowed_origins="*")
+# socketio = SocketIO(app, cors_allowed_origins="*")
 
 stemmer = SnowballStemmer(language="english")
 
@@ -777,6 +777,7 @@ def make_guess():
         recordGameOver(state, winner)
         output = {"game_state": state, "winner": winner}
         socketio.emit("game_end", output)
+        socketio.emit("update", state)
         return jsonify(output)
     # Check if we need to change turn
     if should_change_turn(state, current_guess):
