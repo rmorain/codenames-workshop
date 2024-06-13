@@ -5,7 +5,7 @@ from flask import (
     request,
     g,
 )
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, join_room, leave_room
 from flask_cors import CORS
 from string import punctuation
 from random import randint, choice, shuffle, sample
@@ -634,6 +634,7 @@ def game():
         game_state=state,
         player_role=role,
         player_team=team,
+        game_code=state["code"]
     )
 
 
@@ -708,7 +709,7 @@ def make_clue():
     state["guesses_left"] = number + 1
     updateState(state)
     writeHist(state, "new clue", team + ": (" + word + " " + str(number) + ")")
-    socketio.emit("update", state)
+    socketio.emit("update", state, room=code)
     return jsonify(state)
 
     # except:
@@ -750,7 +751,7 @@ def make_pass():
     updateState(state)
     writeHist(state, "pass", team)
 
-    socketio.emit("update", state)
+    socketio.emit("update", state, room=code)
     return jsonify(state)
 
 
@@ -776,8 +777,8 @@ def make_guess():
     if winner:
         recordGameOver(state, winner)
         output = {"game_state": state, "winner": winner}
-        socketio.emit("game_end", output)
-        socketio.emit("update", state)
+        socketio.emit("game_end", output, room=code)
+        socketio.emit("update", state, room=code)
         return jsonify(output)
     # Check if we need to change turn
     if should_change_turn(state, current_guess):
@@ -792,7 +793,7 @@ def make_guess():
         team + ": " + str(current_guess) + " " + guess_word + " " + guess_color,
     )
 
-    socketio.emit("update", state)
+    socketio.emit("update", state, room=code)
     return jsonify(state)
 
 
@@ -843,8 +844,8 @@ def is_game_over(state, current_guess):
 
 
 @socketio.on("connect")
-def handle_connect():
-    pass
+def handle_connect(code):
+    join_room(code)
 
 
 if __name__ == "__main__":
