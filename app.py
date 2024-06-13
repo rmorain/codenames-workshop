@@ -4,6 +4,8 @@ from flask import (
     jsonify,
     request,
     g,
+    url_for,
+    redirect
 )
 from flask_socketio import SocketIO, join_room, leave_room
 from flask_cors import CORS
@@ -587,8 +589,10 @@ def writeHist(state, head, entry):
 
 
 # Create new game and insert into DB
-# @app.route("/create")
+@app.route("/create")
 def create_game():
+    role = request.args.get("role")
+    team = request.args.get("team")
     blueStarts = bool(randint(0, 1))
     colors, words = newBoard(blueStarts)
     while True:
@@ -611,16 +615,16 @@ def create_game():
     state["id"] = insertState(state)
     writeHist(state, "new game", "game started")
 
-    return state
+    game_url = url_for("game", code=state['code'], role=role, team=team)
+    return redirect(game_url)
 
 
 @app.route("/game")
 def game():
-    if "code" in request.args:
-        code = request.args.get("code")
-        state = loadState(code)
-    else:
-        state = create_game()
+    code = request.args.get("code")
+    state = loadState(code)
+    if not state:
+        return "Game not found", 404
 
     # Assign a role and team to the player
     role = request.args.get("role")
