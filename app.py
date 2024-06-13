@@ -280,6 +280,33 @@ def recordGameOver(state, winner):
     updateState(state)
     writeHist(state,"game over","game over: "+winner)
 
+def switchTurn(state):
+    state['curr_clue'] = emptyClue()
+    if state["curr_turn"] == "blue":
+        state["curr_turn"] = "red"
+    else:
+        state["curr_turn"] = "blue"
+
+@app.post("/pass")
+def make_pass():
+    data = request.get_json()
+    code = data['code']
+    state = loadState(code)
+    if not state:
+        return "Game not found", 404
+        
+    team = data['team']
+    if team != state['curr_turn'] or state['guesses_left'] < 1:
+        return "Can't pass now", 400
+    
+    switchTurn(state)
+    
+    updateState(state)
+    writeHist(state, "pass", team)
+
+    socketio.emit("update", state)
+    return jsonify(state)
+
 @app.post("/make_guess")
 def make_guess():
     data = request.get_json()
@@ -290,7 +317,7 @@ def make_guess():
         
     team = data['team']
     if team != state['curr_turn'] or state['guesses_left'] < 1:
-        return "Clue not needed", 400
+        return "Guess not needed", 400
     
     current_guess = int(data['guess'])
     
@@ -305,11 +332,7 @@ def make_guess():
         return jsonify({"game_state": state, "winner": winner})
     # Check if we need to change turn
     if change_turn(state, current_guess):
-        state['curr_clue'] = emptyClue()
-        if state["curr_turn"] == "blue":
-            state["curr_turn"] = "red"
-        else:
-            state["curr_turn"] = "blue"
+        switchTurn(state)
     
     updateState(state)
     guess_word = state['words'][current_guess]

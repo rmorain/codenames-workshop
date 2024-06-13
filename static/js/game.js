@@ -91,12 +91,10 @@ document.addEventListener('DOMContentLoaded', function() {
 				return;
 			}
 	
-			if (gameState.guesses_left === 0) {
+			if (gameState.guesses_left < 1) {
 				alert("No more guesses allowed this turn.");
 				return;
 			}
-			gameState.guessed[index] = true;
-			gameState.guesses_left--; 
 
 			const args = {
 				code: gameState.code,
@@ -137,6 +135,31 @@ document.addEventListener('DOMContentLoaded', function() {
 	
 	function handlePass(){
 		alert("TODO: pass");
+		if (gameState.curr_turn != playerTeam){
+			alert("Not your turn!");
+			return;
+		}
+		if (gameState.guesses_left < 1) {
+			alert("Can't pass now");
+			return;
+		}
+		const args = {
+			code: gameState.code,
+			team: playerTeam
+		}
+		fetch('/pass', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(args)
+		})
+		.then(response => response.json())
+		.then(data => {
+			gameState = data;
+			renderGameBoard();
+		})
+		.catch(error => alert(error)); //do i need to manually refresh state/board?
 	}
 
     // Function to handle clue submission
