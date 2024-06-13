@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session, g
 from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask_cors import CORS
 from string import punctuation
 from random import randint, choice, shuffle, sample
 from itertools import chain, combinations
@@ -13,9 +14,8 @@ handler = logging.FileHandler('codenames.log')
 logger.addHandler(handler)
 '''
 
-# from codenames.cnai import Spymaster, W2VAssoc, W2VGuesser
-# from codenames.cngame import Codenames
 app = Flask(__name__)
+CORS(app)
 
 app.secret_key = "859c86bf1895e69b3c6dfc1c6092a3b3c45d9b55f22ac29aa816ed87793c00b8"
 #socketio = SocketIO(app, async_mode='gevent', cors_allowed_origins="*")
@@ -24,7 +24,6 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 stemmer = SnowballStemmer(language='english')
 
 #= database ================
-#copied from gbspend/hieros_human/p2hierosserver.py
 
 DATABASE = 'cn.db'
 
@@ -236,7 +235,7 @@ def isValid(word, board_words):
 def isEmpty(clue):
     return clue['word'] == "" and clue["number"] < 0
 
-#POST json should be {team:__, word:__, number:__}
+#POST json should be {code:__, team:__, word:__, number:__}
 @app.post("/make_clue")
 def make_clue():
     data = request.get_json()
@@ -337,8 +336,9 @@ def make_guess():
     winner = is_game_over(state, current_guess)
     if winner:
         recordGameOver(state, winner)
-        socketio.emit("game_end", {"winner": winner})
-        return jsonify({"game_state": state, "winner": winner})
+        output = {"game_state": state, "winner": winner}
+        socketio.emit("game_end", output)
+        return jsonify(output)
     # Check if we need to change turn
     if should_change_turn(state, current_guess):
         switchTurn(state)

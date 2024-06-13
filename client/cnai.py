@@ -20,7 +20,7 @@ def powerset(iterable, rng=range(2,4)): #range(2-5) instead?
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in rng)
 
-#checks for valid hints:
+#checks for valid clue words:
 #    not on board, one word only, no acronyms, all alphabetical chars
 def isValid(word, board_words):
     word_stem = stemmer.stem(word)
@@ -42,7 +42,7 @@ def w2vPreprocess(model, w):
     return w
     
 #========================================
-#MODEL
+#MODEL SINGLETON
 
 w2v_model = None
 def getW2vModel():
@@ -59,42 +59,42 @@ def getW2vModel():
 #Maybe rename/refactor to SimilarityGuesser?
 class Guesser:
     def __init__(self):
-        self.hints = []
-        self.num_guesses = 0 #increment with each guess, should never get higher than the num in hint[1]
+        self.clues = []
+        self.num_guesses = 0 #increment with each guess, should never get higher than the num in clues[1]
     
     def isCheat(self):
         return False
     
-    #hint is (word,num) tuple
-    def newHint(self, hint):
-        self.hints.append(hint)
+    #clue is (word,num) tuple
+    def newClue(self, clue):
+        self.clues.append(clue)
         self.num_guesses = 0
     
     #returns one of the words from choices as the guess (not board, just list of possible words)
     #game class will only ask for guesses if the guesser has some left
     def nextGuess(self, choices):
         if VERB: print("inG choices:",choices)
-        temp = self.preprocess(self.hints[0][0].lower())
-        if VERB: print("inG prehint:",self.hints[0],temp,self.isKnown(temp))
+        temp = self.preprocess(self.clues[0][0].lower())
+        if VERB: print("inG preclue:",self.clues[0],temp,self.isKnown(temp))
         
-        hint = None
-        i = len(self.hints)-1
+        clue = None
+        i = len(self.clues)-1
         while i >= 0:
-            temp = self.preprocess(self.hints[i][0].lower())
+            temp = self.preprocess(self.clues[i][0].lower())
             if VERB: print("inG in while temp:",temp)
             if self.isKnown(temp):
-                hint = temp
+                clue = temp
                 break
             i -= 1
-        if VERB: print("inG hint:",hint)
-        if hint is None:
+        if VERB: print("inG clue:",clue)
+        if clue is None:
             return None
         max_v = -9999
         max_w = None
         for ch in choices:
             ch = self.preprocess(ch)
-            s = self.getSimilarity(hint, ch)
-            if VERB: print("inG sim:",hint, ch,s)
+            s = self.getSimilarity(clue, ch)
+            if VERB: print("inG sim:",clue, ch,s)
             if s > max_v:
                 max_v = s
                 max_w = ch
@@ -159,7 +159,7 @@ class Assoc:
     def preprocess(self, w):
         raise NotImplementedError
     
-    #gives subclasses option of clearing cache after each hint gen cycle (balance between cached and not)
+    #gives subclasses option of clearing cache after each clue gen cycle (balance between cached and not)
     def clearCache(self):
         return
 
@@ -189,23 +189,23 @@ class Spymaster:
     
     class Combo:
         def __init__(self):
-            self.scores = [] #all similarity scores gen'd for this combo, regardless of hint
-            #also track hint with max sim score
-            self.max_hint = None
+            self.scores = [] #all similarity scores gen'd for this combo, regardless of clue
+            #also track clue with max sim score
+            self.max_clue = None
             self.max_sim = -9999
         
-        def addOption(self, hint, sim):
+        def addOption(self, clue, sim):
             self.scores.append(sim)
             if self.max_sim < sim:
                 self.max_sim = sim
-                self.max_hint = hint
+                self.max_clue = clue
         
         def getAvgSim(self):
             return sum(self.scores)/len(self.scores)
     
-    #returns (hint, number) tuple
+    #returns (clue, number) tuple
     #IDEA: if there are only 3-4 words left, lean more toward hail marys
-    def makeHint(self, board, blue):
+    def makeClue(self, board, blue):
         board_words = set([item for sublist in list(board.values()) for item in sublist])
         neg = board['N'] + board['A'] + (board['R'] if blue else board['U'])
         pos = board['U'] if blue else board['R']
@@ -215,8 +215,8 @@ class Spymaster:
         pos = [self.assoc.preprocess(w) for w in pos]
         
         #Game AI approach:
-        #1. find combo with highest avg hint similarity (hyp: most likely to be closest related combo)
-        #2. pick the highest-scoring hint for that combo as our hint (# is just len of combo ofc)
+        #1. find combo with highest avg clue similarity (hyp: most likely to be closest related combo)
+        #2. pick the highest-scoring clue for that combo as our clue (# is just len of combo ofc)
         
         self.assoc.clearCache() #each assoc knows how to handle this itself
         
@@ -230,13 +230,13 @@ class Spymaster:
             curr = self.assoc.getAssocs(list(combo),neg, 10)
             
             any_added = False #DEBUG
-            for hint,sim in curr:
-                hint = hint.lower() #something more robust?
-                if isValid(hint, board_words):
-                    combos[combo].addOption(hint, sim)
+            for clue,sim in curr:
+                clue = clue.lower() #something more robust?
+                if isValid(clue, board_words):
+                    combos[combo].addOption(clue, sim)
                     any_added = True
             if not any_added:
-                print("NONE ADDED:", combo, [hint for hint,sim in curr]) #pass
+                print("NONE ADDED:", combo, [clue for clue,sim in curr]) #pass
         
         if VERB: print("mH combos:",combos)
         
@@ -245,7 +245,7 @@ class Spymaster:
         
          # bc I got "TypeError: object of type 'NoneType' has no len()" for len(max_combo) below???
         if not combos.keys():
-            print("NO HINT!",board,blue,pos,neg)
+            print("NO CLUE!",board,blue,pos,neg)
             return ("None",1)
         
         for combo in combos.keys():
@@ -256,8 +256,16 @@ class Spymaster:
                 max_combo = combo
         
         if VERB: print("mH max_combo:",max_combo) #DEBUG
-        return (combos[max_combo].max_hint, len(max_combo)), max_combo
+        return (combos[max_combo].max_clue, len(max_combo)), max_combo
 
+
+
+#** Instantiate your AI here! ********
+
+def getAI():
+    return Spymaster(W2VAssoc())
+
+#*************************************
 
 #=TEST======================================
 
@@ -282,9 +290,9 @@ if __name__ == "__main__":
     neg = board['R'] + board['A']
     
     m = Spymaster(W2VAssoc())
-    hint = m.makeHint(board, True)
+    clue = m.makeClue(board, True)
     
-    print(hint)
+    print(clue)
     
     gg = W2VGuesser()
 
@@ -292,7 +300,7 @@ if __name__ == "__main__":
     print(gg.getSimilarity("dog","cat"))
     print(gg.getSimilarity("dog","hound"))
 
-    gg.newHint(hint)
+    gg.newClue(clue)
     choices = sum(board.values(), [])
     print(gg.nextGuess(choices))
     print(VERB)
@@ -301,7 +309,7 @@ if __name__ == "__main__":
 
 '''
 GUESSER TEST with hardcoded
-hint = ("fast",2)
+clue = ("fast",2)
 
 flute    -0.01920261
 charge    -0.005023578

@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 	
 			if (gameState.guesses_left < 1) {
-				alert("No more guesses allowed this turn.");
+				alert("Can't guess yet.");
 				return;
 			}
 
