@@ -206,17 +206,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify(args)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(error => {
+                        throw new Error(error.error);
+                    });
+                }
+            })
             .then(data => {
                 gameState = data;
                 renderGameBoard();
             })
-            .catch(error => alert(error)); //do i need to manually refresh state/board?
+            .catch(error => {
+                alert("Error: " + error.message);
+                // Optionally, you can refresh the game state/board here if needed
+            });
         }
 
     }
 
-    const socket = io("https://codenames.click")
+    const socket = io()
     socket.on('connect', () => {
             console.log('Connected to the server');
         });
