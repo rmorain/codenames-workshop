@@ -254,6 +254,14 @@ def make_clue():
     word = data['word'].lower().strip()
     number = int(data['number'])
     
+    if team == 'blue':
+        max_num = len([color for color in state["colors"] if color == "U"])
+    else:
+        max_num = len([color for color in state["colors"] if color == "R"])
+    
+    if number < 1 or number > max_num:
+        return "Invalid clue number", 400
+    
     #validate word
     bad_word = any(p in word for p in punctuation + " \t\r\n")
     if bad_word or not isValid(word,state['words']):
@@ -282,6 +290,7 @@ def recordGameOver(state, winner):
 
 def switchTurn(state):
     state['curr_clue'] = emptyClue()
+    state['guesses_left'] = 0
     if state["curr_turn"] == "blue":
         state["curr_turn"] = "red"
     else:
@@ -331,7 +340,7 @@ def make_guess():
         socketio.emit("game_end", {"winner": winner})
         return jsonify({"game_state": state, "winner": winner})
     # Check if we need to change turn
-    if change_turn(state, current_guess):
+    if should_change_turn(state, current_guess):
         switchTurn(state)
     
     updateState(state)
@@ -343,7 +352,7 @@ def make_guess():
     return jsonify(state)
 
 
-def change_turn(state, current_guess):
+def should_change_turn(state, current_guess):
     if (state["guesses_left"] == 0) or (guessed_wrong(state, current_guess)):
         return True
     else:
