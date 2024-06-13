@@ -246,7 +246,6 @@ def make_clue():
     if not state:
         return "Game not found", 404
     
-    game_state = state['game_state']
     team = data['team']
     
     if team != state['curr_turn'] or not isEmpty(state['curr_clue']):
@@ -261,9 +260,9 @@ def make_clue():
         return "Invalid clue word", 400
     
     #filling in clue changes game state
-    state['curr_clue']['word'] = word;
-    state['curr_clue']['number'] = number;
-    state['guesses_left'] = number + 1;
+    state['curr_clue']['word'] = word
+    state['curr_clue']['number'] = number
+    state['guesses_left'] = number + 1
     
     updateState(state)
     writeHist(state,"new clue", team + ": ("+word + " " + str(number) + ")")
@@ -276,48 +275,61 @@ def make_clue():
 
 #=============================================
 
+def recordGameOver(state, winner):
+    state['game_state'] = GAME_OVER_STATE
+    updateState(state)
+    writeHist(state,"game over","game over: "+winner)
+
 @app.post("/make_guess")
-def make_guess(): #TODO
+def make_guess():
     data = request.get_json()
-    print(data)
-    return "WORKING", 501
+    code = data['code']
+    state = loadState(code)
+    if not state:
+        return "Game not found", 404
+        
+    team = data['team']
+    if team != state['curr_turn'] or state['guesses_left'] < 1:
+        return "Clue not needed", 400
     
-    #######
+    current_guess = int(data['guess'])
     
-    if "gameState" in data.keys():
-        updated_state = data["gameState"]
-        current_guess = data["currentGuess"]
-        # Check if game is over
-        winner = game_over(updated_state, current_guess)
-        if winner:
-            socketio.emit("game_end", {"winner": winner})
-            return jsonify({"game_state": updated_state, "winner": winner})
-        # Check if we need to change turn
-        if change_turn(updated_state, current_guess):
-            if updated_state["current_turn"] == "blue":
-                updated_state["current_turn"] = "red"
-            else:
-                updated_state["current_turn"] = "blue"
-    else: #?????
-        updated_state = data
-    app.config["game_state"].update(updated_state)
+    current_guess = data["guess"]
+    state['guessed'][current_guess] = True
+    state['guesses_left'] -= 1 
+    # Check if game is over
+    winner = is_game_over(state, current_guess)
+    if winner:
+        recordGameOver(state, winner)
+        socketio.emit("game_end", {"winner": winner})
+        return jsonify({"game_state": state, "winner": winner})
+    # Check if we need to change turn
+    if change_turn(state, current_guess):
+        state['curr_clue'] = emptyClue()
+        if state["curr_turn"] == "blue":
+            state["curr_turn"] = "red"
+        else:
+            state["curr_turn"] = "blue"
+    
+    updateState(state)
+    guess_word = state['words'][current_guess]
+    guess_color = state['colors'][current_guess]
+    writeHist(state,"new guess", team + ": " + str(current_guess) + " " + guess_word + " " + guess_color)
 
-    socketio.emit("update", app.config["game_state"])
-
-    # Return the updated game state back to the client
-    return jsonify(app.config["game_state"])
+    socketio.emit("update", state)
+    return jsonify(state)
 
 
 def change_turn(state, current_guess):
-    if (state["guesses_left"] == 0) or (guessed_wrong(current_guess)):
+    if (state["guesses_left"] == 0) or (guessed_wrong(state, current_guess)):
         return True
     else:
         return False
 
 
-def guessed_wrong(game_state, current_guess):
-    game_state_colors = game_state["colors"]
-    current_turn = game_state["current_turn"]
+def guessed_wrong(state, current_guess):
+    game_state_colors = state["colors"]
+    current_turn = state["curr_turn"]
     if current_turn == "blue" and game_state_colors[current_guess] == "R":
         return True
     elif current_turn == "red" and game_state_colors[current_guess] == "U":
@@ -326,22 +338,22 @@ def guessed_wrong(game_state, current_guess):
         return False
 
 
-def game_over(game_state, current_guess):
+def is_game_over(state, current_guess):
     red_words_guessed = [
         color
-        for color, guess in zip(game_state["colors"], game_state["guessed"])
+        for color, guess in zip(state["colors"], state["guessed"])
         if guess and color == "R"
     ]
     blue_words_guessed = [
         color
-        for color, guess in zip(game_state["colors"], game_state["guessed"])
+        for color, guess in zip(state["colors"], state["guessed"])
         if guess and color == "U"
     ]
-    red_words_total = [color for color in game_state["colors"] if color == "R"]
-    blue_words_total = [color for color in game_state["colors"] if color == "U"]
+    red_words_total = [color for color in state["colors"] if color == "R"]
+    blue_words_total = [color for color in state["colors"] if color == "U"]
 
     # Assassin is picked
-    if game_state["colors"][current_guess] == "A":
+    if state["colors"][current_guess] == "A":
         # Opposite team wins
         return "assassin"
     # Red team wins

@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			gameState.guesses_left--; 
 
 			const args = {
+				code: gameState.code,
 				team: playerTeam,
 				guess: currentGuess
 			};
