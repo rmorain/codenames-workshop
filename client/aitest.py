@@ -71,8 +71,8 @@ def runTrial():
         board[color].append(word)
 
     m = Spymaster(W2VAssoc())
-    hint, combo = m.makeHint(board, True)
-    return selected, colors, board, hint, combo
+    clue, combo = m.makeClue(board, True)
+    return selected, colors, board, clue, combo
 
 if __name__ == "__main__":
     s = randint(1,10000) #funny, but you can't GET seed from random
@@ -84,11 +84,11 @@ if __name__ == "__main__":
     seed(s)
     print("Seed:",s)
     
-    selected, colors, board, hint, combo = runTrial()
+    selected, colors, board, clue, combo = runTrial()
     print()
     printBoard(selected)
 
-    print(hint)
+    print(clue)
     print()
 
     input("Press Enter to reveal answer(s)...\n")
