@@ -241,6 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const socket = io()
     socket.on('connect', () => {
+            socket.emit('join_room', gameState.code)
             console.log('Connected to the server');
         });
     socket.on('player_info', (data) => {

@@ -21,16 +21,13 @@ logger.addHandler(handler)
 
 app = Flask(__name__)
 
+app.secret_key = "859c86bf1895e69b3c6dfc1c6092a3b3c45d9b55f22ac29aa816ed87793c00b8"
 if os.environ.get("FLASK_ENV") == "development":
     CORS(app, origins=["http://127.0.0.1:5000"])  # Allow local development server
+    socketio = SocketIO(app, cors_allowed_origins="*")
 else:
     CORS(app, origins=["https://codenames.click"])  # Allow production domain
-
-CORS(app)
-
-app.secret_key = "859c86bf1895e69b3c6dfc1c6092a3b3c45d9b55f22ac29aa816ed87793c00b8"
-socketio = SocketIO(app, async_mode='gevent', cors_allowed_origins="*")
-# socketio = SocketIO(app, cors_allowed_origins="*")
+    socketio = SocketIO(app, async_mode="gevent", cors_allowed_origins="*")
 
 stemmer = SnowballStemmer(language="english")
 
@@ -634,7 +631,7 @@ def game():
         game_state=state,
         player_role=role,
         player_team=team,
-        game_code=state["code"]
+        game_code=state["code"],
     )
 
 
@@ -844,8 +841,14 @@ def is_game_over(state, current_guess):
 
 
 @socketio.on("connect")
-def handle_connect(code):
+def handle_connect():
+    pass
+
+
+@socketio.on("join_room")
+def handle_join_room(code):
     join_room(code)
+    print(f"Joined room: {code}")
 
 
 if __name__ == "__main__":
