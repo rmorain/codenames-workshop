@@ -13,9 +13,8 @@ On Linux:
 `ssh -i path/to/production.pem ubuntu@codenames.click`
 ## Pull code from Github repository
 `git pull`
-## Reload daemon and restart codenames service
+## Restart codenames service
 ```
-sudo systemctl daemon-reload
 sudo systemctl restart codenames
 ```
 
