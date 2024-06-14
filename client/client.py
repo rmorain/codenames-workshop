@@ -73,7 +73,7 @@ if __name__ == "__main__":
                 state = r.json()
             try:
                 #from the docs:
-                #receive() only returns when an event is received from the server
+                #receive() only returns when an event is received from the server
                 event = sio.receive(timeout=5) #without timeout, user can't ctrl+c
                 event_name = event[0]
                 data = event[1] #should only ever be one json object

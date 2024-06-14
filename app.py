@@ -624,7 +624,7 @@ def game():
     code = request.args.get("code")
     state = loadState(code)
     if not state:
-        return "Game not found", 404
+        return errMsg("Game not found"), 404
 
     # Assign a role and team to the player
     role = request.args.get("role")
@@ -653,7 +653,7 @@ def get_game_state():
     code = request.args.get("code")
     state = loadState(code)
     if not state:
-        return "Game not found", 404
+        return errMsg("Game not found"), 404
     return jsonify(state)
 
 
@@ -678,6 +678,9 @@ def isValid(word, board_words):
 
 def isEmpty(clue):
     return clue["word"] == "" and clue["number"] < 0
+    
+def errMsg(msg):
+    jsonify({"error": msg})
 
 
 # POST json should be {code:__, team:__, word:__, number:__}
@@ -688,10 +691,10 @@ def make_clue():
     code = data["code"]
     state = loadState(code)
     if not state:
-        return jsonify({"error": "Game not found"}), 404
+        return errMsg("Game not found"), 404
     team = data["team"]
     if team != state["curr_turn"] or not isEmpty(state["curr_clue"]):
-        return jsonify({"error": "Clue not needed"}), 400
+        return errMsg("Clue not needed"), 400
     word = data["word"].lower().strip()
     number = int(data["number"])
     if team == "blue":
@@ -699,11 +702,11 @@ def make_clue():
     else:
         max_num = len([color for color in state["colors"] if color == "R"])
     if number < 1 or number > max_num:
-        return jsonify({"error": "Invalid clue number"}), 400
+        return errMsg("Invalid clue number"), 400
     # validate word
     bad_word = any(p in word for p in punctuation + " \t\r\n")
     if bad_word or not isValid(word, state["words"]):
-        return jsonify({"error": "Invalid clue word"}), 400
+        return errMsg("Invalid clue word"), 400
     # filling in clue changes game state
     state["curr_clue"]["word"] = word
     state["curr_clue"]["number"] = number
@@ -714,7 +717,7 @@ def make_clue():
     return jsonify(state)
 
     # except:
-    #    return "Error recording clue", 400
+    #    return errMsg("Error recording clue"), 400
 
 
 # =============================================
@@ -741,11 +744,11 @@ def make_pass():
     code = data["code"]
     state = loadState(code)
     if not state:
-        return "Game not found", 404
+        return errMsg("Game not found"), 404
 
     team = data["team"]
     if team != state["curr_turn"] or state["guesses_left"] < 1:
-        return "Can't pass now", 400
+        return errMsg("Can't pass now"), 400
 
     switchTurn(state)
 
@@ -762,11 +765,11 @@ def make_guess():
     code = data["code"]
     state = loadState(code)
     if not state:
-        return "Game not found", 404
+        return errMsg("Game not found"), 404
 
     team = data["team"]
     if team != state["curr_turn"] or state["guesses_left"] < 1:
-        return "Guess not needed", 400
+        return errMsg("Guess not needed"), 400
 
     current_guess = int(data["guess"])
 
@@ -808,9 +811,9 @@ def should_change_turn(state, current_guess):
 def guessed_wrong(state, current_guess):
     game_state_colors = state["colors"]
     current_turn = state["curr_turn"]
-    if current_turn == "blue" and game_state_colors[current_guess] == "R":
+    if current_turn == "blue" and game_state_colors[current_guess] != "U":
         return True
-    elif current_turn == "red" and game_state_colors[current_guess] == "U":
+    elif current_turn == "red" and game_state_colors[current_guess] != "R":
         return True
     else:
         return False

@@ -166,7 +166,15 @@ document.addEventListener('DOMContentLoaded', function() {
 			},
 			body: JSON.stringify(args)
 		})
-		.then(response => response.json())
+		.then(response => {
+			if (response.ok) {
+				return response.json();
+			} else {
+				return response.json().then(error => {
+					throw new Error(error.error);
+				});
+			}
+		})
 		.then(data => {
 			gameState = data;
 			renderGameBoard();
