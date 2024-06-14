@@ -688,6 +688,9 @@ def errMsg(msg):
 def make_clue():
     data = request.get_json()
     # try:
+    orig = "" #origin: html (human) or py (AI)
+    if "orig" in data:
+        orig = data["orig"]
     code = data["code"]
     state = loadState(code)
     if not state:
@@ -712,7 +715,7 @@ def make_clue():
     state["curr_clue"]["number"] = number
     state["guesses_left"] = number + 1
     updateState(state)
-    writeHist(state, "new clue", team + ": (" + word + " " + str(number) + ")")
+    writeHist(state, "new clue", orig + " " +team + ": (" + word + " " + str(number) + ")")
     socketio.emit("update", state, room=code)
     return jsonify(state)
 

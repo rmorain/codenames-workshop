@@ -64,6 +64,7 @@ if __name__ == "__main__":
                     print("\t",w)
                 #POST json should be {code:__, team:__, word:__, number:__}
                 args = {
+                    'orig': 'py',
                     'code': code,
                     'team': team,
                     'word': clue[0],

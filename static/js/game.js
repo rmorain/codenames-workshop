@@ -209,6 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			//client isn't responsible for updating game state
 			//just submit clue and get new state from server
 			const args = {
+				orig: 'html',
 				code: gameState.code,
 				team: playerTeam,
 				word: newClueWord,
