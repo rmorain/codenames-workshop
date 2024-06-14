@@ -4,6 +4,7 @@ from sys import argv
 import socketio
 from socketio.exceptions import TimeoutError
 from cnai import getAI
+import pudb
 
 # == HELPERS ===============================
 
@@ -31,7 +32,7 @@ BOARD_SIZE = 25
 if os.environ.get("FLASK_ENV") == "development":
     SERVER_URL = "http://localhost:5000"
 else:
-    SERVER_URL = "codenames.click"
+    SERVER_URL = "https://codenames.click"
 GET_STATE_URL = SERVER_URL + "/get_game_state?code="  # get
 MAKE_CLUE_URL = SERVER_URL + "/make_clue"  # post
 
