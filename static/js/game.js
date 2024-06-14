@@ -146,7 +146,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 	
 	function handlePass(){
-		alert("TODO: pass");
 		if (gameState.curr_turn != playerTeam){
 			alert("Not your turn!");
 			return;
