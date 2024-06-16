@@ -1,38 +1,8 @@
-anaconda-anon-usage @ file:///croot/anaconda-anon-usage_1710965072196/work
-archspec @ file:///croot/archspec_1709217642129/work
-boltons @ file:///work/perseverance-python-buildout/croot/boltons_1698851177130/work
-Brotli @ file:///croot/brotli-split_1714483155106/work
-certifi @ file:///croot/certifi_1707229174982/work/certifi
-cffi @ file:///croot/cffi_1714483155441/work
-charset-normalizer @ file:///tmp/build/80754af9/charset-normalizer_1630003229654/work
-conda @ file:///croot/conda_1714403036266/work
-conda-content-trust @ file:///croot/conda-content-trust_1714483159009/work
-conda-libmamba-solver @ file:///croot/conda-libmamba-solver_1706733287605/work/src
-conda-package-handling @ file:///croot/conda-package-handling_1714483155348/work
-conda_package_streaming @ file:///work/perseverance-python-buildout/croot/conda-package-streaming_1698847176583/work
-cryptography @ file:///croot/cryptography_1714660666131/work
-distro @ file:///croot/distro_1714488253808/work
 gensim==4.3.2
-idna @ file:///croot/idna_1714398848350/work
-jsonpatch @ file:///croot/jsonpatch_1714483231291/work
 jsonpointer==2.1
-libmambapy @ file:///croot/mamba-split_1714483352891/work/libmambapy
-menuinst @ file:///croot/menuinst_1714510563922/work
 numpy==1.26.4
-packaging @ file:///croot/packaging_1710807400464/work
-platformdirs @ file:///work/perseverance-python-buildout/croot/platformdirs_1701732573265/work
-pluggy @ file:///work/perseverance-python-buildout/croot/pluggy_1698805497733/work
-pycosat @ file:///croot/pycosat_1714510623388/work
-pycparser @ file:///tmp/build/80754af9/pycparser_1636541352034/work
-PySocks @ file:///work/perseverance-python-buildout/croot/pysocks_1698845478203/work
-requests @ file:///croot/requests_1707355572290/work
-ruamel.yaml @ file:///work/perseverance-python-buildout/croot/ruamel.yaml_1698863605521/work
 scipy==1.12.0
 setuptools==69.5.1
 smart-open==7.0.4
-tqdm @ file:///croot/tqdm_1714567712644/work
-truststore @ file:///work/perseverance-python-buildout/croot/truststore_1701735771625/work
-urllib3 @ file:///croot/urllib3_1707770551213/work
 wheel==0.43.0
 wrapt==1.16.0
-zstandard @ file:///croot/zstandard_1714677652653/work
