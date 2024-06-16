@@ -4,7 +4,6 @@ from sys import argv
 import socketio
 from socketio.exceptions import TimeoutError
 from cnai import getAI
-import pudb
 
 # == HELPERS ===============================
 
