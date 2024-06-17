@@ -67,7 +67,7 @@ class Guesser:
     
     #clue is (word,num) tuple
     def newClue(self, clue):
-        self.clues.append(clue)
+        self.clues.append(clue[0])
         self.num_guesses = 0
     
     #returns one of the words from choices as the guess (not board, just list of possible words)
