@@ -8,3 +8,10 @@ setuptools==69.5.1
 smart-open==7.0.4
 wheel==0.43.0
 wrapt==1.16.0
+flask
+gunicorn
+flask-socketio
+eventlet
+gevent
+flask_cors
+nltk
