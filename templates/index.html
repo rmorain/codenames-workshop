@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Codenames Game</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}"> -->
+	<!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css',_scheme='https') }}"> -->
+	<link rel="stylesheet" href="{{ url_for('codenames.static', filename='css/index.css') }}">
 </head>
 <body onload="popGames()">
     <div class="container">
@@ -40,10 +42,11 @@
     </div>
 
     <script>
+		const BASE_URL = '/codenames';
         document.getElementById('create-game-button').addEventListener('click', function() {
             const team = document.getElementById('team').value;
             const role = document.getElementById('role').value;
-            window.location.href = `/create?team=${team}&role=${role}`;
+            window.location.href = `${BASE_URL}/create?team=${team}&role=${role}`;
         });
 		
 		document.getElementById('refresh-button').addEventListener('click', popGames);
@@ -59,7 +62,7 @@
 		//--------------------------------------------------
 		
 		function popGames() {
-			fetch('/getgames')
+			fetch(`${BASE_URL}/getgames`)
 			  .then(response => {
 				if (response.ok) {
 				  return response.json(); // Parse the response data as JSON
@@ -91,7 +94,7 @@
 			const code = evt.currentTarget.textContent;
 			const team = document.getElementById('team').value;
             const role = document.getElementById('role').value;
-            window.location.href = `/game?code=${code}&team=${team}&role=${role}`;
+            window.location.href = `${BASE_URL}/game?code=${code}&team=${team}&role=${role}`;
 		}
 		
     </script>

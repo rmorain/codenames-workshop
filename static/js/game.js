@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const BASE_URL = '/codenames';
     function renderGameBoard() {
         let boardHTML = '';
 
@@ -101,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				team: playerTeam,
 				guess: currentGuess
 			};
-			fetch('/make_guess', {
+			fetch(`${BASE_URL}/make_guess`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -158,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			code: gameState.code,
 			team: playerTeam
 		}
-		fetch('/pass', {
+		fetch(`${BASE_URL}/pass`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -219,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Clear the input fields
             clueWordInput.value = '';
             clueNumberInput.value = '';
-            fetch('/make_clue', {
+            fetch(`${BASE_URL}/make_clue`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -247,7 +248,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     }
 
-    const socket = io()
+    // const socket = io()
+    const socket = io({
+        path: '/codenames/socket.io',
+        transports: ['websocket', 'polling']
+    });
     socket.on('connect', () => {
             socket.emit('join_room', gameState.code)
             console.log('Connected to the server');
@@ -257,6 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
     socket.on('update', (data) => {
+        console.log('Update', data)
         gameState = data;
         renderGameBoard();
     });

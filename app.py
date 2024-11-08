@@ -5,7 +5,8 @@ from flask import (
     request,
     g,
     url_for,
-    redirect
+    redirect,
+    Blueprint
 )
 from flask_socketio import SocketIO, join_room, leave_room
 from flask_cors import CORS
@@ -22,14 +23,31 @@ logger.addHandler(handler)
 """
 
 app = Flask(__name__)
+codenames = Blueprint('codenames', __name__, 
+    url_prefix='/codenames',
+    static_folder='static', 
+    template_folder='templates'  
+)
+app.register_blueprint(codenames)
 
 app.secret_key = "859c86bf1895e69b3c6dfc1c6092a3b3c45d9b55f22ac29aa816ed87793c00b8"
+
+# Define allowed origins based on environment
 if os.environ.get("FLASK_ENV") == "development":
-    CORS(app, origins=["http://127.0.0.1:5000"])  # Allow local development server
-    socketio = SocketIO(app, cors_allowed_origins="*")
+    allowed_origins = ["http://127.0.0.1:5000"]
 else:
-    CORS(app, origins=["https://codenames.click"])  # Allow production domain
-    socketio = SocketIO(app, async_mode="gevent", cors_allowed_origins="*")
+    allowed_origins = ["https://mind.cs.byu.edu"]
+
+# Apply CORS configuration
+CORS(app, origins=allowed_origins)
+
+# Configure Socket.IO
+socketio = SocketIO(
+    app,
+    async_mode="gevent",
+    cors_allowed_origins=allowed_origins,
+    path="/socket.io"  # Match your blueprint URL prefix
+)
 
 stemmer = SnowballStemmer(language="english")
 
@@ -72,6 +90,7 @@ def close_connection(e):
 
 @app.route("/")
 def index():
+    print("here")
     return render_template("index.html")
 
 
@@ -680,7 +699,7 @@ def isEmpty(clue):
     return clue["word"] == "" and clue["number"] < 0
     
 def errMsg(msg):
-    jsonify({"error": msg})
+    return jsonify({"error": msg})
 
 
 # POST json should be {code:__, team:__, word:__, number:__}
@@ -709,7 +728,8 @@ def make_clue():
     # validate word
     bad_word = any(p in word for p in punctuation + " \t\r\n")
     if bad_word or not isValid(word, state["words"]):
-        return errMsg("Invalid clue word"), 400
+        m = errMsg("Invalid clue word")
+        return m, 400
     # filling in clue changes game state
     state["curr_clue"]["word"] = word
     state["curr_clue"]["number"] = number
@@ -852,6 +872,7 @@ def is_game_over(state, current_guess):
 
 @socketio.on("connect")
 def handle_connect():
+    print("Client connected")
     pass
 
 
@@ -862,4 +883,4 @@ def handle_join_room(code):
 
 
 if __name__ == "__main__":
-    socketio.run(app, host="", port=8000)
+    socketio.run(app, host="0.0.0.0", port=5000) 
