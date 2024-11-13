@@ -1,42 +1,56 @@
-from flask import (
-    Flask,
-    render_template,
-    jsonify,
-    request,
-    g,
-    url_for,
-    redirect,
-    Blueprint
-)
-from flask_socketio import SocketIO, join_room, leave_room
-from flask_cors import CORS
-from string import punctuation
-from random import randint, choice, shuffle, sample
-from nltk.stem.snowball import SnowballStemmer
 import os
+import secrets
 import sqlite3
+from pathlib import Path
+from random import choice, randint, sample, shuffle
+from string import punctuation
+
+from flask import (
+    Blueprint,
+    Flask,
+    g,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
+from flask_cors import CORS
+from flask_socketio import SocketIO, join_room
+from nltk.stem.snowball import SnowballStemmer
 
 """
 logger = logging.getLogger('werkzeug')
 handler = logging.FileHandler('codenames.log')
 logger.addHandler(handler)
+
 """
-
-app = Flask(__name__)
-codenames = Blueprint('codenames', __name__, 
-    url_prefix='/codenames',
-    static_folder='static', 
-    template_folder='templates'  
-)
-app.register_blueprint(codenames)
-
-app.secret_key = "859c86bf1895e69b3c6dfc1c6092a3b3c45d9b55f22ac29aa816ed87793c00b8"
-
 # Define allowed origins based on environment
 if os.environ.get("FLASK_ENV") == "development":
     allowed_origins = ["http://127.0.0.1:5000"]
 else:
     allowed_origins = ["https://mind.cs.byu.edu"]
+
+app = Flask(__name__)
+codenames = Blueprint(
+    "codenames",
+    __name__,
+    url_prefix="/codenames",
+    static_folder="static",
+    template_folder="templates",
+)
+app.register_blueprint(codenames)
+
+SECRET_FILE_PATH = Path(".flask_secret")
+
+try:
+    with SECRET_FILE_PATH.open("r") as secret_file:
+        app.secret_key = secret_file.read()
+except FileNotFoundError:
+    with SECRET_FILE_PATH.open("w") as secret_file:
+        app.secret_key = secrets.token_hex(32)
+        secret_file.write(app.secret_key)
+
 
 # Apply CORS configuration
 CORS(app, origins=allowed_origins)
@@ -46,7 +60,7 @@ socketio = SocketIO(
     app,
     async_mode="gevent",
     cors_allowed_origins=allowed_origins,
-    path="/socket.io"  # Match your blueprint URL prefix
+    path="/socket.io",  # Match your blueprint URL prefix
 )
 
 stemmer = SnowballStemmer(language="english")
@@ -634,7 +648,7 @@ def create_game():
     state["id"] = insertState(state)
     writeHist(state, "new game", "game started")
 
-    game_url = url_for("game", code=state['code'], role=role, team=team)
+    game_url = url_for("game", code=state["code"], role=role, team=team)
     return redirect(game_url)
 
 
@@ -697,7 +711,8 @@ def isValid(word, board_words):
 
 def isEmpty(clue):
     return clue["word"] == "" and clue["number"] < 0
-    
+
+
 def errMsg(msg):
     return jsonify({"error": msg})
 
@@ -707,7 +722,7 @@ def errMsg(msg):
 def make_clue():
     data = request.get_json()
     # try:
-    orig = "" #origin: html (human) or py (AI)
+    orig = ""  # origin: html (human) or py (AI)
     if "orig" in data:
         orig = data["orig"]
     code = data["code"]
@@ -735,7 +750,9 @@ def make_clue():
     state["curr_clue"]["number"] = number
     state["guesses_left"] = number + 1
     updateState(state)
-    writeHist(state, "new clue", orig + " " +team + ": (" + word + " " + str(number) + ")")
+    writeHist(
+        state, "new clue", orig + " " + team + ": (" + word + " " + str(number) + ")"
+    )
     socketio.emit("update", state, room=code)
     return jsonify(state)
 
@@ -883,4 +900,4 @@ def handle_join_room(code):
 
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=5000) 
+    socketio.run(app, host="0.0.0.0", port=5000)
