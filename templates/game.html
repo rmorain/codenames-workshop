@@ -8,6 +8,8 @@
 	<script src="{{ url_for('codenames.static', filename='js/game.js') }}"></script>
 </head>
 <script>
+	const FLASK_ENV = {{ config['FLASK_ENV']|tojson }};
+	const BASE_URL = FLASK_ENV ? '' : 'codenames';
     let gameState = {{ game_state|tojson }};
     const playerRole = "{{ player_role}}";
     const playerTeam = "{{ player_team}}";

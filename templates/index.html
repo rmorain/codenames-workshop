@@ -42,7 +42,8 @@
     </div>
 
     <script>
-		const BASE_URL = '/codenames';
+		const FLASK_ENV = {{ config['FLASK_ENV']|tojson }};
+		const BASE_URL = FLASK_ENV ? '' : 'codenames';
         document.getElementById('create-game-button').addEventListener('click', function() {
             const team = document.getElementById('team').value;
             const role = document.getElementById('role').value;

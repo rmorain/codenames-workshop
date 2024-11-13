@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const BASE_URL = '/codenames';
     function renderGameBoard() {
         let boardHTML = '';
 
@@ -250,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // const socket = io()
     const socket = io({
-        path: '/codenames/socket.io',
+        path: `${BASE_URL}/socket.io`,
         transports: ['websocket', 'polling']
     });
     socket.on('connect', () => {

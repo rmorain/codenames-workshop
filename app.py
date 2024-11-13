@@ -25,17 +25,19 @@ handler = logging.FileHandler('codenames.log')
 logger.addHandler(handler)
 
 """
+app = Flask(__name__)
 # Define allowed origins based on environment
+print(os.environ.get("FLASK_ENV"))
+app.config["FLASK_ENV"] = os.environ.get("FLASK_ENV")
 if os.environ.get("FLASK_ENV") == "development":
-    allowed_origins = ["http://127.0.0.1:5000"]
+    allowed_origins = ["http://127.0.0.1:5000", "http://localhost:5000"]
 else:
     allowed_origins = ["https://mind.cs.byu.edu"]
 
-app = Flask(__name__)
 codenames = Blueprint(
     "codenames",
     __name__,
-    url_prefix="/codenames",
+    # url_prefix="/codenames",
     static_folder="static",
     template_folder="templates",
 )
@@ -104,7 +106,6 @@ def close_connection(e):
 
 @app.route("/")
 def index():
-    print("here")
     return render_template("index.html")
 
 
