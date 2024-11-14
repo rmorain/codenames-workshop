@@ -9,7 +9,7 @@
 </head>
 <script>
 	const FLASK_ENV = {{ config['FLASK_ENV']|tojson }};
-	const BASE_URL = FLASK_ENV ? '' : 'codenames';
+	const BASE_URL = FLASK_ENV ? '' : '/codenames';
     let gameState = {{ game_state|tojson }};
     const playerRole = "{{ player_role}}";
     const playerTeam = "{{ player_team}}";
@@ -19,7 +19,7 @@
 </script>
 <body onload="setCode()">
     <div class="header">
-            <button class="btn" onclick="window.location.href='{{ url_for('index') }}'">Back to Homepage</button>
+		<button class="btn" onclick="window.location.href = BASE_URL + '{{ url_for('index') }}'">Go to Homepage</button>
     </div>
 	<div style="display: flex; flex-direction: row;">
 		<div id="info-container" style="float: left; width: 15%;">
