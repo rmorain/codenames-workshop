@@ -30,26 +30,31 @@ app = Flask(__name__)
 print(os.environ.get("FLASK_ENV"))
 app.config["FLASK_ENV"] = os.environ.get("FLASK_ENV")
 if os.environ.get("FLASK_ENV") == "development":
+    url_prefix = ""
     allowed_origins = ["http://127.0.0.1:5000", "http://localhost:5000"]
 else:
+    url_prefix = "/codenames"
     allowed_origins = ["https://mind.cs.byu.edu"]
 
 codenames = Blueprint(
     "codenames",
     __name__,
-    # url_prefix="/codenames",
+    url_prefix=url_prefix,
     static_folder="static",
     template_folder="templates",
 )
 app.register_blueprint(codenames)
 
 SECRET_FILE_PATH = Path(".flask_secret")
+print(SECRET_FILE_PATH)
 
 try:
     with SECRET_FILE_PATH.open("r") as secret_file:
+        print("Reading secret key")
         app.secret_key = secret_file.read()
 except FileNotFoundError:
     with SECRET_FILE_PATH.open("w") as secret_file:
+        print("creating secret key")
         app.secret_key = secrets.token_hex(32)
         secret_file.write(app.secret_key)
 
@@ -64,6 +69,8 @@ socketio = SocketIO(
     cors_allowed_origins=allowed_origins,
     path="/socket.io",  # Match your blueprint URL prefix
 )
+
+print("Socketio", socketio)
 
 stemmer = SnowballStemmer(language="english")
 
@@ -106,6 +113,7 @@ def close_connection(e):
 
 @app.route("/")
 def index():
+    print("Render index")
     return render_template("index.html")
 
 
