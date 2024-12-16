@@ -31,14 +31,20 @@ BOARD_SIZE = 25
 
 if os.environ.get("FLASK_ENV") == "development":
     SERVER_URL = "http://localhost:5000"
+    HANDLE = ""
     socketio_path = "socket.io"
 else:
     SERVER_URL = "https://mind.cs.byu.edu"
+    HANDLE = "/codenames"
     socketio_path = "/codenames/socket.io"
-GET_STATE_URL = SERVER_URL + "/get_game_state?code="  # get
-MAKE_CLUE_URL = SERVER_URL + "/make_clue"  # post
+GET_STATE_URL = SERVER_URL + HANDLE + "/get_game_state?code="  # get
+MAKE_CLUE_URL = SERVER_URL + HANDLE + "/make_clue"  # post
 
 USAGE = "Usage: <game code> <'red' | 'blue'>"
+
+print(SERVER_URL)
+print(GET_STATE_URL)
+print(MAKE_CLUE_URL)
 
 
 # run from command line: give code and team, then it plays the whole game :)
