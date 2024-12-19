@@ -5,6 +5,12 @@ body {
     background-color: #f8f9fa;
     color: #333;
 }
+.navbar {
+    background-color: #007bff;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
 .container {
     max-width: 800px;
     margin: 50px auto;
@@ -16,6 +22,11 @@ body {
 }
 h1 {
     font-size: 36px;
+    margin-bottom: 20px;
+    color: #007bff;
+}
+h2 {
+    font-size: 28px;
     margin-bottom: 20px;
     color: #007bff;
 }
@@ -62,4 +73,7 @@ label {
 select {
     padding: 8px;
     font-size: 16px;
+}
+.games-section {
+    margin-top: 30px;
 }

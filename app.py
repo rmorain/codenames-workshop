@@ -656,8 +656,9 @@ def create_game():
     }
     state["id"] = insertState(state)
     writeHist(state, "new game", "game started")
-
     game_url = url_for("game", code=state["code"], role=role, team=team)
+    if url_prefix:
+        game_url = url_prefix + game_url
     return redirect(game_url)
 
 

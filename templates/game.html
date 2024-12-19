@@ -5,47 +5,49 @@
     <title>Codenames Game</title>
     <link rel="stylesheet" href="{{ url_for('codenames.static', filename='css/game.css') }}">
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-	<script src="{{ url_for('codenames.static', filename='js/game.js') }}"></script>
+    <script src="{{ url_for('codenames.static', filename='js/game.js') }}"></script>
 </head>
 <script>
-	const FLASK_ENV = {{ config['FLASK_ENV']|tojson }};
-	const BASE_URL = FLASK_ENV ? '' : '/codenames';
+    const FLASK_ENV = {{ config['FLASK_ENV']|tojson }};
+    const BASE_URL = FLASK_ENV ? '' : '/codenames';
     let gameState = {{ game_state|tojson }};
     const playerRole = "{{ player_role}}";
     const playerTeam = "{{ player_team}}";
-	function setCode(){
-		document.getElementById('code-badge').textContent = "Game Code: " + gameState.code;
-	}
+    function setCode(){
+        document.getElementById('code-badge').textContent = "Game Code: " + gameState.code;
+    }
 </script>
 <body onload="setCode()">
-    <div class="header">
-		<button class="btn" onclick="window.location.href = BASE_URL + '{{ url_for('index') }}'">Go to Homepage</button>
+    <nav class="navbar">
+        <div class="container">
+            <button class="btn" onclick="window.location.href = BASE_URL + '{{ url_for('index') }}'">Go to Homepage</button>
+        </div>
+    </nav>
+    <div class="main-content">
+        <div id="info-container">
+            <div id='code-badge' class="info">GAME CODE</div>
+            <div id="team-scores" class="info"></div>
+            <div id="team-role" class="info"></div>
+            <div id="current-turn" class="info"></div>
+            <div id="current-clue" class="info"></div>
+            <div id="guesses-remaining" class="info"></div>
+            <div id="game-end" class="info"></div>
+        </div>
+        <div id="game-container">
+            <div id="game-board"></div>
+            {% if player_role == 'spymaster' %}
+            <div id="clue-form-container" class="clue-form">
+                <label for="clue-word">Clue Word:</label>
+                <input type="text" id="clue-word">
+                <label for="clue-number">Number:</label>
+                <input type="number" id="clue-number" min="0">
+                <button id="submit-clue" class="btn">Submit Clue</button>
+            </div>
+            {% endif %}
+            {% if player_role == 'guesser' %}
+            <button id="submit-pass" class="btn">Pass</button>
+            {% endif %}
+        </div>
     </div>
-	<div style="display: flex; flex-direction: row;">
-		<div id="info-container" style="float: left; width: 15%;">
-			<div id='code-badge' class="info">GAME CODE</div>
-			<div id="team-scores" class="info"></div>
-			<div id="team-role" class="info"></div>
-			<div id="current-turn" class="info"></div>
-			<div id="current-clue" class="info"></div>
-			<div id="guesses-remaining" class="info"></div>
-			<div id="game-end" class="info"></div>
-		</div>
-		<div id="game-container" style="float: left; width: 85%;">
-			<div id="game-board" style="width:100%"></div>
-			{% if player_role == 'spymaster' %}
-			<div id="clue-form-container" class="clue-form">
-				<label for="clue-word">Clue Word:</label>
-				<input type="text" id="clue-word">
-				<label for="clue-number">Number:</label>
-				<input type="number" id="clue-number" min="0">
-				<button id="submit-clue" class="btn">Submit Clue</button>
-			</div>
-			{% endif %}
-			{% if player_role == 'guesser' %}
-			<button id="submit-pass" class="btn">Pass</button>
-			{% endif %}
-		</div>
-	</div>
 </body>
 </html>

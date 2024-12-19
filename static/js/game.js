@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update the current turn UI element
         const currentTurnElement = document.getElementById('current-turn');
         currentTurnElement.textContent = `Current Turn: ${gameState.curr_turn}`;
+        currentTurnElement.className = 'info'; // Reset classes
+        currentTurnElement.classList.add(gameState.curr_turn.toLowerCase() === 'red' ? 'turn-red' : 'turn-blue');
 
         // Update the remaining guesses UI element
         const guessesRemainingElement = document.getElementById('guesses-remaining');
