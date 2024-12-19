@@ -1,9 +1,10 @@
-import requests
 import os
 from sys import argv
+
+import requests
 import socketio
-from socketio.exceptions import TimeoutError
 from cnai import getAI
+from socketio.exceptions import TimeoutError
 
 # == HELPERS ===============================
 
@@ -30,12 +31,20 @@ BOARD_SIZE = 25
 
 if os.environ.get("FLASK_ENV") == "development":
     SERVER_URL = "http://localhost:5000"
+    HANDLE = ""
+    socketio_path = "socket.io"
 else:
-    SERVER_URL = "https://codenames.click"
-GET_STATE_URL = SERVER_URL + "/get_game_state?code="  # get
-MAKE_CLUE_URL = SERVER_URL + "/make_clue"  # post
+    SERVER_URL = "https://mind.cs.byu.edu"
+    HANDLE = "/codenames"
+    socketio_path = "/codenames/socket.io"
+GET_STATE_URL = SERVER_URL + HANDLE + "/get_game_state?code="  # get
+MAKE_CLUE_URL = SERVER_URL + HANDLE + "/make_clue"  # post
 
 USAGE = "Usage: <game code> <'red' | 'blue'>"
+
+print(SERVER_URL)
+print(GET_STATE_URL)
+print(MAKE_CLUE_URL)
 
 
 # run from command line: give code and team, then it plays the whole game :)
@@ -53,11 +62,15 @@ if __name__ == "__main__":
     ai = getAI()
 
     with socketio.SimpleClient() as sio:
-        sio.connect(SERVER_URL)
-        print("SID: ", sio.sid)
-
-        sio.emit("join_room", code)
-        print("Joined room:", code)
+        sio.connect(
+            SERVER_URL,
+            socketio_path=socketio_path,
+            transports=["websocket", "polling"],
+        )
+        if sio.connected:
+            print("SID: ", sio.sid)
+            sio.emit("join_room", code)
+            print("Joined room:", code)
 
         print("Starting game loop. Use Ctrl+C to exit early")
         response = requests.get(GET_STATE_URL + code)
